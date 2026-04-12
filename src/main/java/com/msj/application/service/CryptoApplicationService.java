@@ -103,7 +103,7 @@ public class CryptoApplicationService {
         }
 
         cryptoRepository.deleteById(id);
-        eventPublisher.publishCryptoDeleted(id.value());
+        eventPublisher.publishCryptoDeleted(id.value().toString());
         log.info("Crypto deleted successfully");
     }
 }

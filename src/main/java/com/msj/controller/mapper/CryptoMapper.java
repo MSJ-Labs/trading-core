@@ -26,7 +26,13 @@ public interface CryptoMapper {
     /**
      * Convert Crypto domain object to CryptoResponse DTO
      */
+    @Mapping(target = "id", source = "id.value", qualifiedByName = "tsidToString")
     CryptoResponse toResponse(Crypto crypto);
+
+    @org.mapstruct.Named("tsidToString")
+    default String tsidToString(io.hypersistence.tsid.TSID tsid) {
+        return tsid != null ? tsid.toString() : null;
+    }
 
     /**
      * Update Crypto entity from UpdateCryptoRequest

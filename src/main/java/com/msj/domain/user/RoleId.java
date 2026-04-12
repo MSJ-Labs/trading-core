@@ -1,23 +1,27 @@
 package com.msj.domain.user;
 
-import java.util.UUID;
+import io.hypersistence.tsid.TSID;
 
 /**
  * Value object for Role ID
  */
-public record RoleId(String value) {
+public record RoleId(TSID value) {
 
     public RoleId {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("RoleId value cannot be null or blank");
+        if (value == null) {
+            throw new IllegalArgumentException("RoleId value cannot be null");
         }
     }
 
     public static RoleId generate() {
-        return new RoleId(UUID.randomUUID().toString());
+        return new RoleId(TSID.fast());
     }
 
     public static RoleId of(String value) {
-        return new RoleId(value);
+        return new RoleId(TSID.from(value));
+    }
+
+    public static RoleId of(long value) {
+        return new RoleId(TSID.from(value));
     }
 }

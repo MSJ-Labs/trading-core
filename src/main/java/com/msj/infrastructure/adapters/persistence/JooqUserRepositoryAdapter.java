@@ -35,7 +35,7 @@ public class JooqUserRepositoryAdapter implements UserRepository {
 
         // Upsert user
         dsl.insertInto(USERS)
-                .set(USERS.ID, user.getId().value())
+                .set(USERS.ID, user.getId().value().toLong())
                 .set(USERS.USERNAME, user.getUsername())
                 .set(USERS.EMAIL, user.getEmail())
                 .set(USERS.PASSWORD, user.getPassword())
@@ -87,7 +87,7 @@ public class JooqUserRepositoryAdapter implements UserRepository {
 
         Record record = dsl.select()
                 .from(USERS.leftJoin(USER_PROFILES).on(USERS.ID.eq(USER_PROFILES.USER_ID)))
-                .where(USERS.ID.eq(id.value()))
+                .where(USERS.ID.eq(id.value().toLong()))
                 .fetchOne();
 
         if (record == null) {
@@ -155,24 +155,24 @@ public class JooqUserRepositoryAdapter implements UserRepository {
         log.debug("Deleting user by id: {}", id.value());
 
         // Delete user roles first (cascade will handle this, but explicit is better)
-        dsl.deleteFrom(USER_ROLES).where(USER_ROLES.USER_ID.eq(id.value())).execute();
+        dsl.deleteFrom(USER_ROLES).where(USER_ROLES.USER_ID.eq(id.value().toLong())).execute();
 
         // Delete user profile
-        dsl.deleteFrom(USER_PROFILES).where(USER_PROFILES.USER_ID.eq(id.value())).execute();
+        dsl.deleteFrom(USER_PROFILES).where(USER_PROFILES.USER_ID.eq(id.value().toLong())).execute();
 
         // Delete user
-        dsl.deleteFrom(USERS).where(USERS.ID.eq(id.value())).execute();
+        dsl.deleteFrom(USERS).where(USERS.ID.eq(id.value().toLong())).execute();
     }
 
     @Override
     @Transactional(readOnly = true)
     public boolean existsById(UserId id) {
-        return dsl.fetchExists(dsl.selectOne().from(USERS).where(USERS.ID.eq(id.value())));
+        return dsl.fetchExists(dsl.selectOne().from(USERS).where(USERS.ID.eq(id.value().toLong())));
     }
 
     private User mapToUser(Record record) {
         User user = User.builder()
-                .id(UserId.of(record.get(USERS.ID)))
+                .id(UserId.of(record.get(USERS.ID).longValue()))
                 .username(record.get(USERS.USERNAME))
                 .email(record.get(USERS.EMAIL))
                 .password(record.get(USERS.PASSWORD))
@@ -192,7 +192,7 @@ public class JooqUserRepositoryAdapter implements UserRepository {
         // Map profile if exists
         if (record.get(USER_PROFILES.ID) != null) {
             UserProfile profile = UserProfile.builder()
-                    .id(UserProfileId.of(record.get(USER_PROFILES.ID)))
+                    .id(UserProfileId.of(record.get(USER_PROFILES.ID).longValue()))
                     .userId(user.getId())
                     .timezone(record.get(USER_PROFILES.TIMEZONE))
                     .language(record.get(USER_PROFILES.LANGUAGE))
@@ -214,16 +214,16 @@ public class JooqUserRepositoryAdapter implements UserRepository {
         Result<Record> records = dsl.select()
                 .from(ROLES)
                 .join(USER_ROLES).on(ROLES.ID.eq(USER_ROLES.ROLE_ID))
-                .where(USER_ROLES.USER_ID.eq(userId.value()))
+                .where(USER_ROLES.USER_ID.eq(userId.value().toLong()))
                 .fetch();
 
         for (Record record : records) {
             Role role = Role.builder()
-                    .id(RoleId.of(record.get(ROLES.ID)))
+                    .id(RoleId.of(record.get(ROLES.ID).longValue()))
                     .name(record.get(ROLES.NAME))
                     .description(record.get(ROLES.DESCRIPTION))
                     .createdAt(record.get(ROLES.CREATED_AT))
-                    .permissions(loadRolePermissions(RoleId.of(record.get(ROLES.ID))))
+                    .permissions(loadRolePermissions(RoleId.of(record.get(ROLES.ID).longValue())))
                     .build();
             roles.add(role);
         }
@@ -237,12 +237,12 @@ public class JooqUserRepositoryAdapter implements UserRepository {
         Result<Record> records = dsl.select()
                 .from(PERMISSIONS)
                 .join(ROLE_PERMISSIONS).on(PERMISSIONS.ID.eq(ROLE_PERMISSIONS.PERMISSION_ID))
-                .where(ROLE_PERMISSIONS.ROLE_ID.eq(roleId.value()))
+                .where(ROLE_PERMISSIONS.ROLE_ID.eq(roleId.value().toLong()))
                 .fetch();
 
         for (Record record : records) {
             Permission permission = Permission.builder()
-                    .id(PermissionId.of(record.get(PERMISSIONS.ID)))
+                    .id(PermissionId.of(record.get(PERMISSIONS.ID).longValue()))
                     .name(record.get(PERMISSIONS.NAME))
                     .description(record.get(PERMISSIONS.DESCRIPTION))
                     .resource(record.get(PERMISSIONS.RESOURCE))
@@ -257,8 +257,8 @@ public class JooqUserRepositoryAdapter implements UserRepository {
 
     private void saveUserProfile(UserProfile profile) {
         dsl.insertInto(USER_PROFILES)
-                .set(USER_PROFILES.ID, profile.getId().value())
-                .set(USER_PROFILES.USER_ID, profile.getUserId().value())
+                .set(USER_PROFILES.ID, profile.getId().value().toLong())
+                .set(USER_PROFILES.USER_ID, profile.getUserId().value().toLong())
                 .set(USER_PROFILES.TIMEZONE, profile.getTimezone())
                 .set(USER_PROFILES.LANGUAGE, profile.getLanguage())
                 .set(USER_PROFILES.THEME, profile.getTheme())
@@ -280,14 +280,14 @@ public class JooqUserRepositoryAdapter implements UserRepository {
     private void saveUserRoles(UserId userId, Set<Role> roles) {
         // First, remove existing roles
         dsl.deleteFrom(USER_ROLES)
-                .where(USER_ROLES.USER_ID.eq(userId.value()))
+                .where(USER_ROLES.USER_ID.eq(userId.value().toLong()))
                 .execute();
 
         // Then, insert new roles
         for (Role role : roles) {
             dsl.insertInto(USER_ROLES)
-                    .set(USER_ROLES.USER_ID, userId.value())
-                    .set(USER_ROLES.ROLE_ID, role.getId().value())
+                    .set(USER_ROLES.USER_ID, userId.value().toLong())
+                    .set(USER_ROLES.ROLE_ID, role.getId().value().toLong())
                     .set(USER_ROLES.ASSIGNED_AT, LocalDateTime.now())
                     .execute();
         }

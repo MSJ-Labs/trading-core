@@ -1,23 +1,27 @@
 package com.msj.domain.user;
 
-import java.util.UUID;
+import io.hypersistence.tsid.TSID;
 
 /**
  * Value object for Permission ID
  */
-public record PermissionId(String value) {
+public record PermissionId(TSID value) {
 
     public PermissionId {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("PermissionId value cannot be null or blank");
+        if (value == null) {
+            throw new IllegalArgumentException("PermissionId value cannot be null");
         }
     }
 
     public static PermissionId generate() {
-        return new PermissionId(UUID.randomUUID().toString());
+        return new PermissionId(TSID.fast());
     }
 
     public static PermissionId of(String value) {
-        return new PermissionId(value);
+        return new PermissionId(TSID.from(value));
+    }
+
+    public static PermissionId of(long value) {
+        return new PermissionId(TSID.from(value));
     }
 }

@@ -1,23 +1,27 @@
 package com.msj.domain.user;
 
-import java.util.UUID;
+import io.hypersistence.tsid.TSID;
 
 /**
  * Value object for UserProfile ID
  */
-public record UserProfileId(String value) {
+public record UserProfileId(TSID value) {
 
     public UserProfileId {
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("UserProfileId value cannot be null or blank");
+        if (value == null) {
+            throw new IllegalArgumentException("UserProfileId value cannot be null");
         }
     }
 
     public static UserProfileId generate() {
-        return new UserProfileId(UUID.randomUUID().toString());
+        return new UserProfileId(TSID.fast());
     }
 
     public static UserProfileId of(String value) {
-        return new UserProfileId(value);
+        return new UserProfileId(TSID.from(value));
+    }
+
+    public static UserProfileId of(long value) {
+        return new UserProfileId(TSID.from(value));
     }
 }

@@ -2,7 +2,7 @@
 -- Initial database schema for crypto assets
 
 CREATE TABLE IF NOT EXISTS crypto (
-    id VARCHAR(36) PRIMARY KEY,
+    id BIGINT PRIMARY KEY,
     symbol VARCHAR(10) NOT NULL UNIQUE,
     name VARCHAR(255) NOT NULL,
     current_price NUMERIC(20, 8) NOT NULL,
@@ -18,4 +18,3 @@ CREATE TABLE IF NOT EXISTS crypto (
 CREATE INDEX idx_crypto_symbol ON crypto(symbol);
 CREATE INDEX idx_crypto_created_at ON crypto(created_at);
 CREATE INDEX idx_crypto_updated_at ON crypto(updated_at);
-

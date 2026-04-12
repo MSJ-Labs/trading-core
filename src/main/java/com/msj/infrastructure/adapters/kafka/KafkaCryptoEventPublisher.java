@@ -35,7 +35,7 @@ public class KafkaCryptoEventPublisher implements CryptoEventPublisher {
             event.put("timestamp", System.currentTimeMillis());
 
             String message = objectMapper.writeValueAsString(event);
-            kafkaTemplate.send(CRYPTO_CREATED_TOPIC, crypto.getId().value(), message);
+            kafkaTemplate.send(CRYPTO_CREATED_TOPIC, crypto.getId().value().toString(), message);
             log.info("Crypto created event published: {}", crypto.getId().value());
         } catch (Exception e) {
             log.error("Error publishing crypto created event", e);
@@ -51,7 +51,7 @@ public class KafkaCryptoEventPublisher implements CryptoEventPublisher {
             event.put("timestamp", System.currentTimeMillis());
 
             String message = objectMapper.writeValueAsString(event);
-            kafkaTemplate.send(CRYPTO_UPDATED_TOPIC, crypto.getId().value(), message);
+            kafkaTemplate.send(CRYPTO_UPDATED_TOPIC, crypto.getId().value().toString(), message);
             log.info("Crypto updated event published: {}", crypto.getId().value());
         } catch (Exception e) {
             log.error("Error publishing crypto updated event", e);

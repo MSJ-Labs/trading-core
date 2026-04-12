@@ -37,12 +37,14 @@ public interface UserMapper {
     /**
      * Convert User domain object to UserResponse DTO
      */
+    @Mapping(target = "id", source = "id.value", qualifiedByName = "tsidToString")
     @Mapping(target = "fullName", expression = "java(user.getFullName())")
     UserResponse toUserResponse(User user);
 
     /**
      * Convert User domain object to UserProfileResponse DTO
      */
+    @Mapping(target = "id", source = "id.value", qualifiedByName = "tsidToString")
     @Mapping(target = "fullName", expression = "java(user.getFullName())")
     @Mapping(target = "timezone", expression = "java(user.getProfile() != null ? user.getProfile().getTimezone() : \"UTC\")")
     @Mapping(target = "language", expression = "java(user.getProfile() != null ? user.getProfile().getLanguage() : \"en\")")
@@ -54,7 +56,13 @@ public interface UserMapper {
     /**
      * Convert Role domain object to RoleResponse DTO
      */
+    @Mapping(target = "id", source = "id.value", qualifiedByName = "tsidToString")
     RoleResponse toRoleResponse(Role role);
+
+    @org.mapstruct.Named("tsidToString")
+    default String tsidToString(io.hypersistence.tsid.TSID tsid) {
+        return tsid != null ? tsid.toString() : null;
+    }
 
     /**
      * Convert list of Role objects to list of RoleResponse DTOs

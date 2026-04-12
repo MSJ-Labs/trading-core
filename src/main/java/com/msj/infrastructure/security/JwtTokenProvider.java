@@ -80,10 +80,7 @@ public class JwtTokenProvider {
      */
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
-                    .build()
-                    .parseClaimsJws(token);
+            getAllClaimsFromToken(token);
             return true;
         } catch (io.jsonwebtoken.security.SignatureException e) {
             log.error("Invalid JWT signature: {}", e.getMessage());
@@ -95,6 +92,8 @@ public class JwtTokenProvider {
             log.error("Unsupported JWT token: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
             log.error("JWT claims string is empty: {}", e.getMessage());
+        } catch (Exception e) {
+            log.error("Error validating token", e);
         }
         return false;
     }

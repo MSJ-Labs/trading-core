@@ -93,7 +93,7 @@ class CryptoControllerTest {
     void testGetCryptoById() throws Exception {
         when(cryptoService.getCryptoById(testCryptoId)).thenReturn(testCrypto);
 
-        mockMvc.perform(get(API_URL + "/" + testCryptoId.value())
+        mockMvc.perform(get(API_URL + "/" + testCryptoId.value().toString())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.symbol").value(SYMBOL))
@@ -158,7 +158,7 @@ class CryptoControllerTest {
                 newName, newPrice, null, null, null, null
         );
 
-        mockMvc.perform(put(API_URL + "/" + testCryptoId.value())
+        mockMvc.perform(put(API_URL + "/" + testCryptoId.value().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -170,11 +170,10 @@ class CryptoControllerTest {
 
     @Test
     void testDeleteCrypto() throws Exception {
-        mockMvc.perform(delete(API_URL + "/" + testCryptoId.value())
+        mockMvc.perform(delete(API_URL + "/" + testCryptoId.value().toString())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
         verify(cryptoService, times(1)).deleteCrypto(any(CryptoId.class));
     }
 }
-

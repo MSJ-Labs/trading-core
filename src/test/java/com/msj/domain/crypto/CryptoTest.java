@@ -1,5 +1,6 @@
 package com.msj.domain.crypto;
 
+import io.hypersistence.tsid.TSID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -103,22 +104,23 @@ class CryptoTest {
         CryptoId id1 = CryptoId.generate();
         CryptoId id2 = CryptoId.generate();
 
-        assertThat(id1.value()).isNotBlank();
-        assertThat(id2.value()).isNotBlank();
+        assertThat(id1.value().toString()).isNotBlank();
+        assertThat(id2.value().toString()).isNotBlank();
         assertThat(id1.value()).isNotEqualTo(id2.value());
     }
 
     @Test
     void testCryptoIdOfMethod() {
-        String value = "test-id";
+        TSID tsid = TSID.fast();
+        String value = tsid.toString();
         CryptoId id = CryptoId.of(value);
 
-        assertThat(id.value()).isEqualTo(value);
+        assertThat(id.value()).isEqualTo(tsid);
     }
 
     @Test
     void testCryptoIdWithNullValueThrowsException() {
-        assertThatThrownBy(() -> CryptoId.of(null))
+        assertThatThrownBy(() -> new CryptoId(null))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -128,4 +130,3 @@ class CryptoTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }
-

@@ -183,9 +183,9 @@ public class UserController {
     public ResponseEntity<UserResponse> setUserStatus(
             @PathVariable String id,
             @RequestBody SetUserStatusRequest request) {
-        log.info("{} user account: {}", request.getEnabled() ? "Enabling" : "Disabling", id);
+        log.info("{} user account: {}", request.isEnabled() ? "Enabling" : "Disabling", id);
 
-        User user = userService.setUserEnabled(UserId.of(id), request.getEnabled());
+        User user = userService.setUserEnabled(UserId.of(id), request.isEnabled());
         return ResponseEntity.ok(userMapper.toUserResponse(user));
     }
 

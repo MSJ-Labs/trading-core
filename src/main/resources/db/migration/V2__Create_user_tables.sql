@@ -3,7 +3,7 @@
 
 -- Users table
 CREATE TABLE users (
-    id VARCHAR(36) PRIMARY KEY,
+    id BIGINT PRIMARY KEY,
     username VARCHAR(100) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE users (
 
 -- Roles table
 CREATE TABLE roles (
-    id VARCHAR(36) PRIMARY KEY,
+    id BIGINT PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL,
     description VARCHAR(255),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -30,7 +30,7 @@ CREATE TABLE roles (
 
 -- Permissions table
 CREATE TABLE permissions (
-    id VARCHAR(36) PRIMARY KEY,
+    id BIGINT PRIMARY KEY,
     name VARCHAR(100) UNIQUE NOT NULL,
     description VARCHAR(255),
     resource VARCHAR(100) NOT NULL,
@@ -40,10 +40,10 @@ CREATE TABLE permissions (
 
 -- User-Role relationship (many-to-many)
 CREATE TABLE user_roles (
-    user_id VARCHAR(36) NOT NULL,
-    role_id VARCHAR(36) NOT NULL,
+    user_id BIGINT NOT NULL,
+    role_id BIGINT NOT NULL,
     assigned_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    assigned_by VARCHAR(36),
+    assigned_by BIGINT,
     PRIMARY KEY (user_id, role_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
@@ -51,8 +51,8 @@ CREATE TABLE user_roles (
 
 -- Role-Permission relationship (many-to-many)
 CREATE TABLE role_permissions (
-    role_id VARCHAR(36) NOT NULL,
-    permission_id VARCHAR(36) NOT NULL,
+    role_id BIGINT NOT NULL,
+    permission_id BIGINT NOT NULL,
     assigned_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (role_id, permission_id),
     FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE,
@@ -61,8 +61,8 @@ CREATE TABLE role_permissions (
 
 -- Profiles table (user preferences/settings)
 CREATE TABLE user_profiles (
-    id VARCHAR(36) PRIMARY KEY,
-    user_id VARCHAR(36) UNIQUE NOT NULL,
+    id BIGINT PRIMARY KEY,
+    user_id BIGINT UNIQUE NOT NULL,
     timezone VARCHAR(50) DEFAULT 'UTC',
     language VARCHAR(10) DEFAULT 'en',
     theme VARCHAR(20) DEFAULT 'light',
@@ -75,48 +75,48 @@ CREATE TABLE user_profiles (
 
 -- Insert default roles
 INSERT INTO roles (id, name, description) VALUES
-('550e8400-e29b-41d4-a716-446655440001', 'ROLE_ADMIN', 'Administrator with full access'),
-('550e8400-e29b-41d4-a716-446655440002', 'ROLE_USER', 'Regular user with basic access'),
-('550e8400-e29b-41d4-a716-446655440003', 'ROLE_TRADER', 'Trading user with crypto access');
+(1, 'ROLE_ADMIN', 'Administrator with full access'),
+(2, 'ROLE_USER', 'Regular user with basic access'),
+(3, 'ROLE_TRADER', 'Trading user with crypto access');
 
 -- Insert default permissions
 INSERT INTO permissions (id, name, description, resource, action) VALUES
 -- Crypto permissions
-('550e8400-e29b-41d4-a716-446655440010', 'CRYPTO_READ', 'Read crypto data', 'CRYPTO', 'READ'),
-('550e8400-e29b-41d4-a716-446655440011', 'CRYPTO_CREATE', 'Create crypto assets', 'CRYPTO', 'CREATE'),
-('550e8400-e29b-41d4-a716-446655440012', 'CRYPTO_UPDATE', 'Update crypto assets', 'CRYPTO', 'UPDATE'),
-('550e8400-e29b-41d4-a716-446655440013', 'CRYPTO_DELETE', 'Delete crypto assets', 'CRYPTO', 'DELETE'),
+(10, 'CRYPTO_READ', 'Read crypto data', 'CRYPTO', 'READ'),
+(11, 'CRYPTO_CREATE', 'Create crypto assets', 'CRYPTO', 'CREATE'),
+(12, 'CRYPTO_UPDATE', 'Update crypto assets', 'CRYPTO', 'UPDATE'),
+(13, 'CRYPTO_DELETE', 'Delete crypto assets', 'CRYPTO', 'DELETE'),
 
 -- User permissions
-('550e8400-e29b-41d4-a716-446655440020', 'USER_READ', 'Read user data', 'USER', 'READ'),
-('550e8400-e29b-41d4-a716-446655440021', 'USER_CREATE', 'Create users', 'USER', 'CREATE'),
-('550e8400-e29b-41d4-a716-446655440022', 'USER_UPDATE', 'Update users', 'USER', 'UPDATE'),
-('550e8400-e29b-41d4-a716-446655440023', 'USER_DELETE', 'Delete users', 'USER', 'DELETE'),
+(20, 'USER_READ', 'Read user data', 'USER', 'READ'),
+(21, 'USER_CREATE', 'Create users', 'USER', 'CREATE'),
+(22, 'USER_UPDATE', 'Update users', 'USER', 'UPDATE'),
+(23, 'USER_DELETE', 'Delete users', 'USER', 'DELETE'),
 
 -- Admin permissions
-('550e8400-e29b-41d4-a716-446655440030', 'ADMIN_FULL_ACCESS', 'Full administrative access', 'ADMIN', 'FULL_ACCESS');
+(30, 'ADMIN_FULL_ACCESS', 'Full administrative access', 'ADMIN', 'FULL_ACCESS');
 
 -- Assign permissions to roles
 INSERT INTO role_permissions (role_id, permission_id) VALUES
 -- Admin gets all permissions
-('550e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440010'),
-('550e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440011'),
-('550e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440012'),
-('550e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440013'),
-('550e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440020'),
-('550e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440021'),
-('550e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440022'),
-('550e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440023'),
-('550e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440030'),
+(1, 10),
+(1, 11),
+(1, 12),
+(1, 13),
+(1, 20),
+(1, 21),
+(1, 22),
+(1, 23),
+(1, 30),
 
 -- Trader gets crypto permissions
-('550e8400-e29b-41d4-a716-446655440003', '550e8400-e29b-41d4-a716-446655440010'),
-('550e8400-e29b-41d4-a716-446655440003', '550e8400-e29b-41d4-a716-446655440011'),
-('550e8400-e29b-41d4-a716-446655440003', '550e8400-e29b-41d4-a716-446655440012'),
+(3, 10),
+(3, 11),
+(3, 12),
 
 -- User gets basic permissions
-('550e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655440010'),
-('550e8400-e29b-41d4-a716-446655440002', '550e8400-e29b-41d4-a716-446655440020');
+(2, 10),
+(2, 20);
 
 -- Create indexes for performance
 CREATE INDEX idx_users_username ON users(username);
@@ -130,4 +130,3 @@ CREATE INDEX idx_user_roles_role_id ON user_roles(role_id);
 CREATE INDEX idx_role_permissions_role_id ON role_permissions(role_id);
 CREATE INDEX idx_role_permissions_permission_id ON role_permissions(permission_id);
 CREATE INDEX idx_user_profiles_user_id ON user_profiles(user_id);
-

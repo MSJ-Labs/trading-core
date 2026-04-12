@@ -34,7 +34,7 @@ public class JooqCryptoRepositoryAdapter implements CryptoRepository {
 
         // Upsert crypto
         dsl.insertInto(CRYPTO)
-                .set(CRYPTO.ID, crypto.getId().value())
+                .set(CRYPTO.ID, crypto.getId().value().toLong())
                 .set(CRYPTO.SYMBOL, crypto.getSymbol())
                 .set(CRYPTO.NAME, crypto.getName())
                 .set(CRYPTO.CURRENT_PRICE, crypto.getCurrentPrice())
@@ -66,7 +66,7 @@ public class JooqCryptoRepositoryAdapter implements CryptoRepository {
 
         Record record = dsl.select()
                 .from(CRYPTO)
-                .where(CRYPTO.ID.eq(id.value()))
+                .where(CRYPTO.ID.eq(id.value().toLong()))
                 .fetchOne();
 
         if (record == null) {
@@ -110,7 +110,7 @@ public class JooqCryptoRepositoryAdapter implements CryptoRepository {
         log.debug("Deleting crypto by id: {}", id.value());
 
         dsl.deleteFrom(CRYPTO)
-                .where(CRYPTO.ID.eq(id.value()))
+                .where(CRYPTO.ID.eq(id.value().toLong()))
                 .execute();
     }
 
@@ -120,7 +120,7 @@ public class JooqCryptoRepositoryAdapter implements CryptoRepository {
         log.debug("Checking if crypto exists by id: {}", id.value());
 
         return dsl.fetchExists(
-            dsl.selectOne().from(CRYPTO).where(CRYPTO.ID.eq(id.value()))
+            dsl.selectOne().from(CRYPTO).where(CRYPTO.ID.eq(id.value().toLong()))
         );
     }
 
