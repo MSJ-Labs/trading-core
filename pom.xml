@@ -25,6 +25,13 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <!-- CVE-2024-25710, CVE-2024-26308: fixed in 1.26.0+ -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>1.27.1</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -231,8 +238,9 @@
                                         <exclude>com.msj.auth.infrastructure.adapters.persistence</exclude>
                                         <!-- Hand-written JOOQ schema — no domain logic -->
                                         <exclude>com.msj.infrastructure.jooq</exclude>
-                                        <!-- Spring Boot entry point -->
+                                        <!-- Spring Boot entry point + config -->
                                         <exclude>com.msj</exclude>
+                                        <exclude>com.msj.config</exclude>
                                     </excludes>
                                     <limits>
                                         <limit>
