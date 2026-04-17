@@ -12,8 +12,8 @@
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring-boot.version>3.3.0</spring-boot.version>
-        <jooq.version>3.19.8</jooq.version>
+        <spring-boot.version>3.4.3</spring-boot.version>
+        <jooq.version>3.19.15</jooq.version>
     </properties>
 
     <dependencyManagement>
@@ -33,11 +33,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
         <dependency>
@@ -88,7 +83,7 @@
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.2.0</version>
+            <version>2.6.0</version>
         </dependency>
 
         <!-- Spring Security (for authentication) -->
@@ -101,18 +96,18 @@
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
-            <version>0.11.5</version>
+            <version>0.12.6</version>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
-            <version>0.11.5</version>
+            <version>0.12.6</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
-            <version>0.11.5</version>
+            <version>0.12.6</version>
             <scope>runtime</scope>
         </dependency>
 
@@ -132,14 +127,14 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
-            <version>1.19.3</version>
+            <version>1.20.4</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>postgresql</artifactId>
-            <version>1.19.3</version>
+            <version>1.20.4</version>
             <scope>test</scope>
         </dependency>
 
@@ -170,7 +165,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
+                <version>3.13.0</version>
                 <configuration>
                     <source>25</source>
                     <target>25</target>
@@ -203,7 +198,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.10</version>
+                <version>0.8.12</version>
                 <executions>
                     <execution>
                         <goals>
@@ -228,8 +223,16 @@
                                 <rule>
                                     <element>PACKAGE</element>
                                     <excludes>
-                                        <exclude>*Test</exclude>
-                                        <exclude>*Config</exclude>
+                                        <!-- REST layer — covered by integration tests, not unit tests -->
+                                        <exclude>com.msj.auth.api</exclude>
+                                        <exclude>com.msj.auth.api.dto</exclude>
+                                        <exclude>com.msj.controller</exclude>
+                                        <!-- Infrastructure adapters — require real DB (testcontainers) -->
+                                        <exclude>com.msj.auth.infrastructure.adapters.persistence</exclude>
+                                        <!-- Hand-written JOOQ schema — no domain logic -->
+                                        <exclude>com.msj.infrastructure.jooq</exclude>
+                                        <!-- Spring Boot entry point -->
+                                        <exclude>com.msj</exclude>
                                     </excludes>
                                     <limits>
                                         <limit>
@@ -249,12 +252,14 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0</version>
+                <version>3.5.2</version>
                 <configuration>
                     <includes>
                         <include>**/*Test.java</include>
                         <include>**/*Tests.java</include>
                     </includes>
+                    <!-- Required for Mockito inline mock maker on Java 21+ -->
+                    <argLine>@{argLine} -XX:+EnableDynamicAgentLoading --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED</argLine>
                 </configuration>
             </plugin>
         </plugins>

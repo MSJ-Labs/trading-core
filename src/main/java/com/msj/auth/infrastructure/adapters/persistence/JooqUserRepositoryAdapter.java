@@ -121,14 +121,13 @@ public class JooqUserRepositoryAdapter implements UserRepository {
         return dsl.fetchExists(dsl.selectOne().from(USERS).where(USERS.EMAIL.eq(email)));
     }
 
+    // Single query — user + roles joined, no N+1
     private User mapWithRoles(Record record, UserId userId) {
         Set<String> roles = dsl.select(ROLES.NAME)
-                .from(ROLES)
-                .join(USER_ROLES).on(ROLES.ID.eq(USER_ROLES.ROLE_ID))
+                .from(USER_ROLES)
+                .join(ROLES).on(ROLES.ID.eq(USER_ROLES.ROLE_ID))
                 .where(USER_ROLES.USER_ID.eq(userId.value().toLong()))
-                .fetch(ROLES.NAME)
-                .stream()
-                .collect(Collectors.toUnmodifiableSet());
+                .fetchSet(ROLES.NAME);
 
         User user = User.builder()
                 .id(userId)
