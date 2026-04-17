@@ -3,7 +3,6 @@ package com.msj.controller;
 import com.msj.auth.domain.user.EmailAlreadyExistsException;
 import com.msj.auth.domain.user.UserNotFoundException;
 import com.msj.auth.domain.user.UsernameAlreadyExistsException;
-import com.msj.domain.crypto.CryptoNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,11 +21,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
-    @ExceptionHandler(CryptoNotFoundException.class)
-    public ResponseEntity<Object> handleCryptoNotFound(CryptoNotFoundException ex, WebRequest request) {
-        return error(HttpStatus.NOT_FOUND, ex.getMessage(), request);
-    }
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<Object> handleUserNotFound(UserNotFoundException ex, WebRequest request) {
