@@ -73,14 +73,13 @@ GET /api/v1/users/me
 
 | Concern | Technology |
 |---|---|
-| Language | Java 25 |
-| Framework | Spring Boot 3.3 |
-| Persistence (write) | JOOQ 3.19.8 (type-safe SQL, no code-gen — hand-written `Tables.java`) |
+| Language | Java 21 (Eclipse Temurin LTS) |
+| Framework | Spring Boot 3.4 |
+| Persistence (write) | JOOQ 3.19 (type-safe SQL, no code-gen — hand-written `Tables.java`) |
 | Persistence (read, Layer 5+) | MongoDB |
-| DB migrations | Flyway — DDL managed exclusively here, `spring.jpa.hibernate.ddl-auto=none` |
+| DB migrations | Flyway — DDL managed exclusively here |
 | IDs | TSID (hypersistence-tsid) — BIGINT in DB, wrapped in value object records |
-| Event bus | Kafka |
-| Observability | ELK (Layer 9) |
+| Event bus | Kafka (Layer 5+) |
 | Security | Spring Security + JWT (httpOnly cookies) |
 | Market data | CoinGecko REST + Binance WebSocket (Layer 3) |
 | Paper trading | Alpaca sandbox API (Layer 8) |
@@ -149,8 +148,31 @@ Current recommendation: stay monolith through Layer 8. Evaluate `marketdata` ext
 | 6 | | Portfolio & positions |
 | 7 | | Alert engine (rules + email) |
 | 8 | | Alpaca paper trading orders |
-| 9 | | ELK integration |
-| 10 | | AWS deployment |
+| 9 | | Observability: Prometheus + Grafana (metrics), Loki (logs), Tempo (traces via OpenTelemetry) |
+| 10 | | SonarCloud (code quality), ArgoCD + Helm (GitOps CD), Traefik (ingress/LB/SSL) |
+| 11 | | Kubernetes (minikube local → AWS EKS prod), HPA for auto-scaling |
+
+## DevOps & infrastructure stack (Layers 9–11)
+
+| Concern | Tool | Notes |
+|---|---|---|
+| Git + CI | GitHub + GitHub Actions | Free; builds, tests, pushes image to ghcr.io |
+| Container registry | ghcr.io | Free, native GitHub integration |
+| Code quality | SonarCloud | Free for public repos; wired to GitHub PRs |
+| GitOps / CD | ArgoCD + Helm | Git is source of truth; auto-syncs k8s on push |
+| Ingress / reverse proxy / SSL | Traefik | Auto-discovers k8s services, Let's Encrypt, WebSocket support |
+| Metrics | Prometheus + Grafana | Spring Boot Actuator → `/actuator/prometheus` → Prometheus → Grafana |
+| Distributed traces | Tempo + Grafana | Via OpenTelemetry (micrometer-tracing-bridge-otel) |
+| Logs | Loki + Grafana | Replaces ELK — lighter, cheaper, same Grafana dashboard |
+| k8s local | minikube | Dev environment |
+| k8s prod | AWS EKS | Layer 11 |
+| Pod scaling | HPA | CPU/memory metrics; Kafka consumer lag for marketdata |
+
+**Observability standard**: OpenTelemetry (OTel) — traces, metrics, logs unified under one SDK. All three pillars visible in a single Grafana dashboard.
+
+**GraphQL**: defer to Layer 4+. Use Netflix DGS (Spring Boot native) if frontend needs multi-resource queries in one call. REST is correct for auth and simple endpoints.
+
+**Inter-service communication**: Kafka (async, Layer 5+), gRPC (sync low-latency, when microservices are extracted).
 
 ## Frontend (separate project, Layer 2+)
 

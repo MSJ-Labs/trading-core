@@ -2,7 +2,6 @@ package com.msj.auth.application.query;
 
 import com.msj.auth.domain.user.User;
 import com.msj.auth.domain.user.UserNotFoundException;
-import com.msj.auth.domain.user.UserId;
 import com.msj.auth.infrastructure.ports.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
+import static com.msj.auth.support.UserTestFactory.activeUser;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
@@ -26,11 +26,7 @@ class GetUserProfileQueryHandlerTest {
 
     @Test
     void handle_userExists_returnsUser() {
-        User user = User.builder()
-                .id(UserId.generate())
-                .username("jdoe")
-                .email("j@doe.com")
-                .build();
+        User user = activeUser("jdoe");
         when(userRepository.findByUsername("jdoe")).thenReturn(Optional.of(user));
 
         User result = handler.handle(new GetUserProfileQuery("jdoe"));

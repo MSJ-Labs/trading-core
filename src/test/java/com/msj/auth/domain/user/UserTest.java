@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 
+import static com.msj.auth.support.UserTestFactory.expiredLockUser;
 import static org.assertj.core.api.Assertions.*;
 
 class UserTest {
@@ -93,16 +94,7 @@ class UserTest {
 
     @Test
     void isCurrentlyLocked_autoUnlocksAfterLockPeriodExpires() {
-        User user = User.builder()
-                .id(UserId.generate())
-                .username("jdoe")
-                .email("j@doe.com")
-                .passwordHash("hash")
-                .enabled(true)
-                .accountNonLocked(false)
-                .lockedUntil(LocalDateTime.now().minusMinutes(1))
-                .failedLoginAttempts(5)
-                .build();
+        User user = expiredLockUser("jdoe");
 
         assertThat(user.isCurrentlyLocked()).isFalse();
         assertThat(user.isAccountNonLocked()).isTrue();

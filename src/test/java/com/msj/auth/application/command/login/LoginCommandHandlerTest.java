@@ -14,10 +14,9 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.Set;
 
+import static com.msj.auth.support.UserTestFactory.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -34,20 +33,7 @@ class LoginCommandHandlerTest {
 
     @BeforeEach
     void setUp() {
-        activeUser = User.builder()
-                .id(com.msj.auth.domain.user.UserId.generate())
-                .username("jdoe")
-                .email("jdoe@example.com")
-                .passwordHash("$hashed$")
-                .enabled(true)
-                .accountNonExpired(true)
-                .accountNonLocked(true)
-                .credentialsNonExpired(true)
-                .failedLoginAttempts(0)
-                .roles(Set.of("ROLE_USER"))
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
+        activeUser = activeUser("jdoe");
     }
 
     @Test
@@ -102,22 +88,7 @@ class LoginCommandHandlerTest {
 
     @Test
     void login_throwsWhenAccountLocked() {
-        User lockedUser = User.builder()
-                .id(com.msj.auth.domain.user.UserId.generate())
-                .username("locked")
-                .passwordHash("$h$")
-                .enabled(true)
-                .accountNonExpired(true)
-                .accountNonLocked(false)
-                .credentialsNonExpired(true)
-                .failedLoginAttempts(5)
-                .lockedUntil(LocalDateTime.now().plusMinutes(25))
-                .roles(Set.of("ROLE_USER"))
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
-
-        when(userRepository.findByUsername("locked")).thenReturn(Optional.of(lockedUser));
+        when(userRepository.findByUsername("locked")).thenReturn(Optional.of(lockedUser()));
 
         assertThatThrownBy(() -> handler.handle(new LoginCommand("locked", "pass")))
                 .isInstanceOf(LockedException.class);
