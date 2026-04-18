@@ -159,6 +159,22 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- WebSocket + STOMP (Layer 3: real-time price streaming to frontend) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
+        <!-- Caffeine in-memory cache (market price cache, 60s TTL) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+
         <!-- TSID for unique identifiers -->
         <dependency>
             <groupId>io.hypersistence</groupId>
@@ -241,6 +257,14 @@
                                         <!-- Spring Boot entry point + config -->
                                         <exclude>com.msj</exclude>
                                         <exclude>com.msj.config</exclude>
+                                        <!-- Market data REST layer -->
+                                        <exclude>com.msj.marketdata.api</exclude>
+                                        <exclude>com.msj.marketdata.api.dto</exclude>
+                                        <!-- Market data config (Spring beans, no domain logic) -->
+                                        <exclude>com.msj.marketdata</exclude>
+                                        <!-- External adapters (CoinGecko HTTP, Binance WebSocket) -->
+                                        <exclude>com.msj.marketdata.infrastructure.adapters.coingecko</exclude>
+                                        <exclude>com.msj.marketdata.infrastructure.adapters.binance</exclude>
                                     </excludes>
                                     <limits>
                                         <limit>
