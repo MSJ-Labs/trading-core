@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static com.msj.infrastructure.jooq.Tables.*;
 
@@ -129,7 +128,7 @@ public class JooqUserRepositoryAdapter implements UserRepository {
                 .where(USER_ROLES.USER_ID.eq(userId.value().toLong()))
                 .fetchSet(ROLES.NAME);
 
-        User user = User.builder()
+        return User.builder()
                 .id(userId)
                 .username(record.get(USERS.USERNAME))
                 .email(record.get(USERS.EMAIL))
@@ -148,7 +147,5 @@ public class JooqUserRepositoryAdapter implements UserRepository {
                 .lockedUntil(record.get(USERS.LOCKED_UNTIL))
                 .roles(roles)
                 .build();
-
-        return user;
     }
 }

@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Component
@@ -24,16 +26,38 @@ public class JwtTokenProvider {
     @Value("${jwt.refresh-token-expiration-ms}")
     private long refreshTokenExpirationMs;
 
-    public String generateAccessToken(String username) {
-        return buildToken(username, accessTokenExpirationMs, "access");
+    public String generateAccessToken(String username, Set<String> roles) {
+        Date now = new Date();
+        return Jwts.builder()
+                .subject(username)
+                .claim("type", "access")
+                .claim("roles", roles)
+                .issuedAt(now)
+                .expiration(new Date(now.getTime() + accessTokenExpirationMs))
+                .signWith(signingKey(), Jwts.SIG.HS512)
+                .compact();
     }
 
-    public String generateRefreshToken(String username) {
-        return buildToken(username, refreshTokenExpirationMs, "refresh");
+    public String generateRefreshToken(String username, Set<String> roles) {
+        Date now = new Date();
+        return Jwts.builder()
+                .subject(username)
+                .claim("type", "refresh")
+                .claim("roles", roles)
+                .issuedAt(now)
+                .expiration(new Date(now.getTime() + refreshTokenExpirationMs))
+                .signWith(signingKey(), Jwts.SIG.HS512)
+                .compact();
     }
 
     public String getUsernameFromToken(String token) {
         return parseClaims(token).getSubject();
+    }
+
+    @SuppressWarnings("unchecked")
+    public Set<String> getRolesFromToken(String token) {
+        List<String> roles = (List<String>) parseClaims(token).get("roles");
+        return roles != null ? Set.copyOf(roles) : Set.of();
     }
 
     public boolean validateToken(String token) {
@@ -44,17 +68,6 @@ public class JwtTokenProvider {
             log.debug("JWT validation failed: {}", e.getMessage());
             return false;
         }
-    }
-
-    private String buildToken(String username, long expirationMs, String type) {
-        Date now = new Date();
-        return Jwts.builder()
-                .subject(username)
-                .claim("type", type)
-                .issuedAt(now)
-                .expiration(new Date(now.getTime() + expirationMs))
-                .signWith(signingKey(), Jwts.SIG.HS512)
-                .compact();
     }
 
     private Claims parseClaims(String token) {

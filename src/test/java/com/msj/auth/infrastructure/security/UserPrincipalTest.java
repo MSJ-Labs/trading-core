@@ -53,6 +53,21 @@ class UserPrincipalTest {
     }
 
     @Test
+    void tokenConstructor_buildsLightweightPrincipalWithoutUser() {
+        UserPrincipal principal = new UserPrincipal("jdoe", Set.of("ROLE_USER", "ROLE_ADMIN"));
+
+        assertThat(principal.getUsername()).isEqualTo("jdoe");
+        assertThat(principal.getUser()).isNull();
+        assertThat(principal.isEnabled()).isTrue();
+        assertThat(principal.isAccountNonExpired()).isTrue();
+        assertThat(principal.isAccountNonLocked()).isTrue();
+        assertThat(principal.isCredentialsNonExpired()).isTrue();
+        assertThat(principal.getAuthorities())
+                .extracting(GrantedAuthority::getAuthority)
+                .containsExactlyInAnyOrder("ROLE_USER", "ROLE_ADMIN");
+    }
+
+    @Test
     void disabledUser_reflectsInPrincipal() {
         User user = User.builder()
                 .id(UserId.generate())

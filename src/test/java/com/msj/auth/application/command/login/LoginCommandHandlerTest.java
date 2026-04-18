@@ -41,8 +41,8 @@ class LoginCommandHandlerTest {
         when(userRepository.findByUsername("jdoe")).thenReturn(Optional.of(activeUser));
         when(passwordEncoder.matches("pass", "$hashed$")).thenReturn(true);
         when(userRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        when(jwtTokenProvider.generateAccessToken("jdoe")).thenReturn("access-token");
-        when(jwtTokenProvider.generateRefreshToken("jdoe")).thenReturn("refresh-token");
+        when(jwtTokenProvider.generateAccessToken(eq("jdoe"), any())).thenReturn("access-token");
+        when(jwtTokenProvider.generateRefreshToken(eq("jdoe"), any())).thenReturn("refresh-token");
 
         LoginResult result = handler.handle(new LoginCommand("jdoe", "pass"));
 

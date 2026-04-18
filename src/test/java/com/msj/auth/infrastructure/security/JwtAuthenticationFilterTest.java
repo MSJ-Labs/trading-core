@@ -9,9 +9,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import static com.msj.auth.support.UserTestFactory.activeUser;
+import java.util.Set;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -20,7 +22,6 @@ class JwtAuthenticationFilterTest {
 
     @Mock private JwtTokenProvider jwtTokenProvider;
     @Mock private JwtCookieService cookieService;
-    @Mock private UserDetailsServiceAdapter userDetailsService;
     @Mock private FilterChain filterChain;
 
     @InjectMocks
@@ -39,13 +40,14 @@ class JwtAuthenticationFilterTest {
         when(cookieService.extractAccessToken(request)).thenReturn("valid-token");
         when(jwtTokenProvider.validateToken("valid-token")).thenReturn(true);
         when(jwtTokenProvider.getUsernameFromToken("valid-token")).thenReturn("jdoe");
-        when(userDetailsService.loadUserByUsername("jdoe"))
-                .thenReturn(new UserPrincipal(activeUser("jdoe")));
+        when(jwtTokenProvider.getRolesFromToken("valid-token")).thenReturn(Set.of("ROLE_USER"));
 
         filter.doFilterInternal(request, response, filterChain);
 
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
         assertThat(SecurityContextHolder.getContext().getAuthentication().getName()).isEqualTo("jdoe");
+        assertThat(SecurityContextHolder.getContext().getAuthentication().getAuthorities())
+                .extracting(GrantedAuthority::getAuthority).containsExactly("ROLE_USER");
         verify(filterChain).doFilter(request, response);
     }
 
@@ -58,8 +60,7 @@ class JwtAuthenticationFilterTest {
         when(cookieService.extractAccessToken(request)).thenReturn(null);
         when(jwtTokenProvider.validateToken("header-token")).thenReturn(true);
         when(jwtTokenProvider.getUsernameFromToken("header-token")).thenReturn("jdoe");
-        when(userDetailsService.loadUserByUsername("jdoe"))
-                .thenReturn(new UserPrincipal(activeUser("jdoe")));
+        when(jwtTokenProvider.getRolesFromToken("header-token")).thenReturn(Set.of("ROLE_USER"));
 
         filter.doFilterInternal(request, response, filterChain);
 

@@ -22,6 +22,6 @@ public class RefreshTokenCommandHandler {
 
         String username = jwtTokenProvider.getUsernameFromToken(token);
         log.info("Refreshing access token for user: {}", username);
-        return jwtTokenProvider.generateAccessToken(username);
+        return jwtTokenProvider.generateAccessToken(username, jwtTokenProvider.getRolesFromToken(token));
     }
 }

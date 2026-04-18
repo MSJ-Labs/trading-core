@@ -46,8 +46,8 @@ public class LoginCommandHandler {
         user.recordSuccessfulLogin();
         userRepository.save(user);
 
-        String accessToken = jwtTokenProvider.generateAccessToken(user.getUsername());
-        String refreshToken = jwtTokenProvider.generateRefreshToken(user.getUsername());
+        String accessToken = jwtTokenProvider.generateAccessToken(user.getUsername(), user.getRoles());
+        String refreshToken = jwtTokenProvider.generateRefreshToken(user.getUsername(), user.getRoles());
 
         log.info("User logged in successfully: {}", command.username());
         return new LoginResult(accessToken, refreshToken, user);

@@ -30,7 +30,7 @@ public class Tables {
         public final Field<LocalDateTime> LOCKED_UNTIL = DSL.field(DSL.name("locked_until"), org.jooq.impl.SQLDataType.LOCALDATETIME);
 
         public Users() {
-            super(DSL.name("users"));
+            super(DSL.name("auth", "users"));
         }
     }
 
@@ -41,7 +41,7 @@ public class Tables {
         public final Field<LocalDateTime> CREATED_AT = DSL.field(DSL.name("created_at"), org.jooq.impl.SQLDataType.LOCALDATETIME.notNull());
 
         public Roles() {
-            super(DSL.name("roles"));
+            super(DSL.name("auth", "roles"));
         }
     }
 
@@ -51,7 +51,7 @@ public class Tables {
         public final Field<LocalDateTime> ASSIGNED_AT = DSL.field(DSL.name("assigned_at"), org.jooq.impl.SQLDataType.LOCALDATETIME.notNull());
 
         public UserRoles() {
-            super(DSL.name("user_roles"));
+            super(DSL.name("auth", "user_roles"));
         }
     }
 }

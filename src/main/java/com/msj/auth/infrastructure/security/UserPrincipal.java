@@ -2,6 +2,7 @@ package com.msj.auth.infrastructure.security;
 
 import com.msj.auth.domain.user.User;
 import lombok.Getter;
+import org.springframework.lang.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,18 +11,17 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/**
- * Spring Security adapter — wraps the domain User.
- * Keeps UserDetails (infrastructure concern) out of the domain.
- */
 public class UserPrincipal implements UserDetails {
 
-    @Getter
+    @Getter @Nullable
     private final User user;
+    private final String username;
     private final Set<GrantedAuthority> authorities;
 
+    // Full user loaded from DB (registration, profile queries)
     public UserPrincipal(User user) {
         this.user = user;
+        this.username = user.getUsername();
         this.authorities = user.getRoles() == null
                 ? Set.of()
                 : user.getRoles().stream()
@@ -29,11 +29,20 @@ public class UserPrincipal implements UserDetails {
                         .collect(Collectors.toUnmodifiableSet());
     }
 
-    @Override public String getUsername() { return user.getUsername(); }
-    @Override public String getPassword() { return user.getPasswordHash(); }
+    // Lightweight — built from JWT claims, no DB hit
+    public UserPrincipal(String username, Set<String> roles) {
+        this.user = null;
+        this.username = username;
+        this.authorities = roles.stream()
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    @Override public String getUsername() { return username; }
+    @Override public String getPassword() { return user != null ? user.getPasswordHash() : null; }
     @Override public Collection<? extends GrantedAuthority> getAuthorities() { return authorities; }
-    @Override public boolean isEnabled() { return user.isEnabled(); }
-    @Override public boolean isAccountNonExpired() { return user.isAccountNonExpired(); }
-    @Override public boolean isAccountNonLocked() { return !user.isCurrentlyLocked(); }
-    @Override public boolean isCredentialsNonExpired() { return user.isCredentialsNonExpired(); }
+    @Override public boolean isEnabled() { return user == null || user.isEnabled(); }
+    @Override public boolean isAccountNonExpired() { return user == null || user.isAccountNonExpired(); }
+    @Override public boolean isAccountNonLocked() { return user == null || !user.isCurrentlyLocked(); }
+    @Override public boolean isCredentialsNonExpired() { return user == null || user.isCredentialsNonExpired(); }
 }
