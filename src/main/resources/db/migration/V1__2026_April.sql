@@ -26,15 +26,6 @@ CREATE TABLE auth.roles (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE auth.permissions (
-    id BIGINT PRIMARY KEY,
-    name VARCHAR(100) UNIQUE NOT NULL,
-    description VARCHAR(255),
-    resource VARCHAR(100) NOT NULL,
-    action VARCHAR(50) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
 CREATE TABLE auth.user_roles (
     user_id BIGINT NOT NULL,
     role_id BIGINT NOT NULL,
@@ -45,58 +36,13 @@ CREATE TABLE auth.user_roles (
     FOREIGN KEY (role_id) REFERENCES auth.roles(id) ON DELETE CASCADE
 );
 
-CREATE TABLE auth.role_permissions (
-    role_id BIGINT NOT NULL,
-    permission_id BIGINT NOT NULL,
-    assigned_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (role_id, permission_id),
-    FOREIGN KEY (role_id) REFERENCES auth.roles(id) ON DELETE CASCADE,
-    FOREIGN KEY (permission_id) REFERENCES auth.permissions(id) ON DELETE CASCADE
-);
-
-CREATE TABLE auth.user_profiles (
-    id BIGINT PRIMARY KEY,
-    user_id BIGINT UNIQUE NOT NULL,
-    timezone VARCHAR(50) DEFAULT 'UTC',
-    language VARCHAR(10) DEFAULT 'en',
-    theme VARCHAR(20) DEFAULT 'dark',
-    notifications_enabled BOOLEAN DEFAULT TRUE,
-    two_factor_enabled BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
-);
-
 INSERT INTO auth.roles (id, name, description) VALUES
-(1, 'ROLE_ADMIN',  'Administrator with full access'),
-(2, 'ROLE_USER',   'Regular user with basic access'),
-(3, 'ROLE_TRADER', 'Trading user with crypto access');
-
-INSERT INTO auth.permissions (id, name, description, resource, action) VALUES
-(10, 'CRYPTO_READ',       'Read crypto data',           'CRYPTO', 'READ'),
-(11, 'CRYPTO_CREATE',     'Create crypto assets',       'CRYPTO', 'CREATE'),
-(12, 'CRYPTO_UPDATE',     'Update crypto assets',       'CRYPTO', 'UPDATE'),
-(13, 'CRYPTO_DELETE',     'Delete crypto assets',       'CRYPTO', 'DELETE'),
-(20, 'USER_READ',         'Read user data',             'USER',   'READ'),
-(21, 'USER_CREATE',       'Create users',               'USER',   'CREATE'),
-(22, 'USER_UPDATE',       'Update users',               'USER',   'UPDATE'),
-(23, 'USER_DELETE',       'Delete users',               'USER',   'DELETE'),
-(30, 'ADMIN_FULL_ACCESS', 'Full administrative access', 'ADMIN',  'FULL_ACCESS');
-
-INSERT INTO auth.role_permissions (role_id, permission_id) VALUES
-(1, 10), (1, 11), (1, 12), (1, 13),
-(1, 20), (1, 21), (1, 22), (1, 23), (1, 30),
-(3, 10), (3, 11), (3, 12),
-(2, 10), (2, 20);
+(1, 'ROLE_ADMIN', 'Administrator with full access'),
+(2, 'ROLE_USER',  'Regular user with basic access');
 
 CREATE INDEX idx_users_username ON auth.users(username);
 CREATE INDEX idx_users_email ON auth.users(email);
 CREATE INDEX idx_users_enabled ON auth.users(enabled);
 CREATE INDEX idx_roles_name ON auth.roles(name);
-CREATE INDEX idx_permissions_name ON auth.permissions(name);
-CREATE INDEX idx_permissions_resource_action ON auth.permissions(resource, action);
 CREATE INDEX idx_user_roles_user_id ON auth.user_roles(user_id);
 CREATE INDEX idx_user_roles_role_id ON auth.user_roles(role_id);
-CREATE INDEX idx_role_permissions_role_id ON auth.role_permissions(role_id);
-CREATE INDEX idx_role_permissions_permission_id ON auth.role_permissions(permission_id);
-CREATE INDEX idx_user_profiles_user_id ON auth.user_profiles(user_id);
