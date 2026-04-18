@@ -21,7 +21,7 @@ public class MarketDataController {
 
     @GetMapping("/coins")
     public ResponseEntity<List<CoinPriceResponse>> getTopCoins(
-            @RequestParam(defaultValue = "20") int limit) {
+            @RequestParam(name = "limit", defaultValue = "20") int limit) {
         List<CoinPriceResponse> coins = getTopCoinsQueryHandler.handle(new GetTopCoinsQuery(limit))
                 .stream()
                 .map(CoinPriceResponse::from)

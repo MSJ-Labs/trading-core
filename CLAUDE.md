@@ -143,9 +143,9 @@ Current recommendation: stay monolith through Layer 8. Evaluate `marketdata` ext
 | Layer | Status | Description |
 |---|---|---|
 | 1 | Done | Auth backend (JWT httpOnly cookies, CQRS, hexagonal) |
-| 2 | Next | Auth frontend (Vite + React, login/register) |
-| 3 | | Market data backend (CoinGecko + Binance WebSocket) |
-| 4 | | Market data frontend (real-time price display) |
+| 2 | Done | Auth frontend (Vite + React, login/register, Zustand, React Query) |
+| 3 | Done | Market data backend (CoinGecko REST + Binance WebSocket, Caffeine cache) |
+| 4 | Done | Market data frontend (price table, STOMP live updates, flash animations) |
 | 5 | | CQRS + Kafka + MongoDB read models |
 | 6 | | Portfolio & positions |
 | 7 | | Alert engine (rules + email) |
