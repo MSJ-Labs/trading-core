@@ -139,12 +139,12 @@ public class JooqUserRepositoryAdapter implements UserRepository {
                 .accountNonExpired(record.get(USERS.ACCOUNT_NON_EXPIRED))
                 .accountNonLocked(record.get(USERS.ACCOUNT_NON_LOCKED))
                 .credentialsNonExpired(record.get(USERS.CREDENTIALS_NON_EXPIRED))
-                .createdAt(record.get(USERS.CREATED_AT))
-                .updatedAt(record.get(USERS.UPDATED_AT))
-                .lastLoginAt(record.get(USERS.LAST_LOGIN_AT))
+                .createdAt(record.get(USERS.CREATED_AT, LocalDateTime.class))
+                .updatedAt(record.get(USERS.UPDATED_AT, LocalDateTime.class))
+                .lastLoginAt(record.get(USERS.LAST_LOGIN_AT, LocalDateTime.class))
                 .failedLoginAttempts(record.get(USERS.FAILED_LOGIN_ATTEMPTS) != null
                         ? record.get(USERS.FAILED_LOGIN_ATTEMPTS) : 0)
-                .lockedUntil(record.get(USERS.LOCKED_UNTIL))
+                .lockedUntil(record.get(USERS.LOCKED_UNTIL, LocalDateTime.class))
                 .roles(roles)
                 .build();
     }
