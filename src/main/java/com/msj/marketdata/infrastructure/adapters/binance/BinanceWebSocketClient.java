@@ -30,6 +30,12 @@ public class BinanceWebSocketClient {
 
     private volatile WebSocket webSocket;
 
+    /**
+     * Opens a combined stream on Binance: one WebSocket connection, multiple symbols.
+     * Format: wss://...?streams=btcusdt@miniTicker/ethusdt@miniTicker/...
+     * Each miniTicker event arrives ~every second and carries symbol + last price.
+     * Connection failures are logged but don't crash startup — prices just won't stream.
+     */
     @PostConstruct
     public void connect() {
         String streams = properties.defaultSymbols().stream()
@@ -88,6 +94,8 @@ public class BinanceWebSocketClient {
 
     private class BinanceListener implements WebSocket.Listener {
 
+        // Java's WebSocket API delivers large frames in chunks (last=false until the final chunk).
+        // We buffer all chunks and process the complete JSON only when last=true.
         private final StringBuilder buffer = new StringBuilder();
 
         @Override

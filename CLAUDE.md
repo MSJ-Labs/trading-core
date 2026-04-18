@@ -112,10 +112,12 @@ GET /api/v1/users/me
 
 ## Database migrations
 
-Flyway migrations in `src/main/resources/db/migration/`. Naming: `V{n}__{Description}.sql`.
+Flyway migrations in `src/main/resources/db/migration/`. Naming convention: **one file per month**, `V{n}__{YYYY}_{Month}.sql`.
 
-- `V1` — `crypto` table
-- `V2` — `users`, `roles`, `permissions`, `user_roles`, `role_permissions`, `user_profiles` + default data
+- `V1__2026_April.sql` — `auth` schema: `users`, `roles`, `user_roles` + seed data
+- `V2__2026_April.sql` — `auth.refresh_tokens` (server-side token revocation)
+
+When adding tables or columns within the same calendar month, increment V and keep the same month name (e.g. `V3__2026_April.sql`). Start a new month name when the calendar month changes (e.g. `V4__2026_May.sql`).
 
 ## Key configuration (application.properties)
 

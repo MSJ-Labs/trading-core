@@ -257,6 +257,8 @@
                                         <!-- Spring Boot entry point + config -->
                                         <exclude>com.msj</exclude>
                                         <exclude>com.msj.config</exclude>
+                                        <!-- Pure utility with defensive unreachable catch (SHA-256 always available) -->
+                                        <exclude>com.msj.auth.domain.token</exclude>
                                         <!-- Market data REST layer -->
                                         <exclude>com.msj.marketdata.api</exclude>
                                         <exclude>com.msj.marketdata.api.dto</exclude>

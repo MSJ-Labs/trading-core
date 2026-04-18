@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -58,6 +60,11 @@ public class JwtTokenProvider {
     public Set<String> getRolesFromToken(String token) {
         List<String> roles = (List<String>) parseClaims(token).get("roles");
         return roles != null ? Set.copyOf(roles) : Set.of();
+    }
+
+    public LocalDateTime getExpirationFromToken(String token) {
+        return parseClaims(token).getExpiration().toInstant()
+                .atZone(ZoneId.systemDefault()).toLocalDateTime();
     }
 
     public boolean validateToken(String token) {
