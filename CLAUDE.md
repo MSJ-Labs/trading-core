@@ -143,10 +143,10 @@ Current recommendation: stay monolith through Layer 8. Evaluate `marketdata` ext
 | Layer | Status | Description |
 |---|---|---|
 | 1 | Done | Auth backend (JWT httpOnly cookies, CQRS, hexagonal) |
-| 2 | Done | Auth frontend (Vite + React, login/register, Zustand, React Query) |
+| 2 | Done | Auth frontend (Vite + React 19, login/register, Zustand, React Query) |
 | 3 | Done | Market data backend (CoinGecko REST + Binance WebSocket, Caffeine cache) |
-| 4 | Done | Market data frontend (price table, STOMP live updates, flash animations) |
-| 5 | | CQRS + Kafka + MongoDB read models |
+| 4 | Done | Market data frontend (AG Grid, 250 coins, live Binance indicator, Iris logo, Lucide icons) |
+| 5 | Next | Kafka + MongoDB: persist price ticks, OHLCV candles, candlestick chart |
 | 6 | | Portfolio & positions |
 | 7 | | Alert engine (rules + email) |
 | 8 | | Alpaca paper trading orders |
@@ -176,6 +176,60 @@ Current recommendation: stay monolith through Layer 8. Evaluate `marketdata` ext
 
 **Inter-service communication**: Kafka (async, Layer 5+), gRPC (sync low-latency, when microservices are extracted).
 
-## Frontend (separate project, Layer 2+)
+## Layer 5 plan (next)
 
-Stack: Vite + React 18, TanStack Query v5, Zustand (UI state), AG Grid Community (data grids), `@stomp/stompjs` (WebSocket), Tailwind CSS. No Redux.
+Goal: persist price history, enable charting.
+
+```
+BinanceWebSocketClient
+  → publish KafkaProducer → topic: market.price.updated
+      → Consumer A: persist raw tick → MongoDB price_ticks collection
+      → Consumer B: aggregate OHLCV 1m candles → MongoDB ohlcv_1m collection
+```
+
+New query endpoint: `GET /api/v1/market/coins/{coinId}/candles?interval=1m&from=&to=`
+
+Frontend: candlestick chart on coin row click using **TradingView Lightweight Charts** (free, Apache 2.0).
+
+**Approach**: go slowly — master Kafka and MongoDB step by step. Start with Docker Compose, then producer, then consumers, then read model queries, then chart UI.
+
+## marketdata/ bounded context (Layer 3+4 — completed)
+
+### Two WebSocket connections
+- **Binance → Backend**: `BinanceWebSocketClient` opens one persistent Java `HttpClient` WebSocket to Binance combined stream (`wss://...?streams=btcusdt@miniTicker/...`). Ticks arrive ~1s, update Caffeine cache, broadcast to STOMP.
+- **Backend → Frontend**: Spring STOMP broker at `/ws` (SockJS fallback). Frontend subscribes to `/topic/prices`. `SimpMessagingTemplate.convertAndSend` fans out to all connected browsers.
+
+### Price data flow
+```
+Binance WS → BinanceWebSocketClient → InMemoryPriceCache (Caffeine)
+                                     → SimpMessagingTemplate → /topic/prices → browser
+CoinGecko REST (every 60s) → InMemoryPriceCache (source of truth for non-Binance coins)
+```
+
+### No price persistence yet
+All prices are ephemeral — Caffeine cache only. No history. Addressed in Layer 5.
+
+### CoinGecko API key
+`coingecko.api-key=${COINGECKO_API_KEY:}` — defaults to empty (unauthenticated). Works in dev; rate-limited to shared anonymous quota. Free Demo key optional. The `x-cg-demo-api-key` header is only sent when key is non-blank.
+
+### Endpoints
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET | `/api/v1/market/coins?limit=250` | Required | Top N coins by market cap |
+| GET | `/api/v1/market/coins/{coinId}` | Required | Single coin price |
+
+## Frontend (separate project `trading-ui`, Layer 2+)
+
+**Stack**: Vite + React 19, TanStack Query v5, Zustand (UI state), AG Grid Community v35 (data grids), `@stomp/stompjs` + SockJS (WebSocket), Tailwind CSS v4, Lucide React (icons). No Redux.
+
+**AG Grid setup**:
+- Uses JS theming API: `themeQuartz.withParams({...})` — no CSS class approach
+- `columnMenu="legacy"` required to fix React 19 event delegation conflict with filter popups
+- `popupParent={document.body}` for filter popup positioning
+- Live price updates via `gridApi.applyTransaction({ update: rows })` — no full re-render
+- `enableCellChangeFlash: true` on price column for Binance tick flash
+
+**Iris branding**:
+- Logo: `src/shared/components/IrisLogo.tsx` — geometric SVG eye in teal
+- Product name: Iris
