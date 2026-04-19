@@ -1,146 +1,125 @@
-# Trading Core - Spring Boot 3 with Hexagonal Architecture
+# Iris — Backend
 
-A production-ready Spring Boot 3 application with Java 25, featuring hexagonal architecture for a cryptocurrency trading domain with CRUD operations, PostgreSQL, Flyway migrations, Kafka event publishing, and comprehensive test coverage with JaCoCo.
+> Personal crypto trading platform. Real-time price monitoring, alert engine, paper trading → real orders.
 
-## Architecture
+Spring Boot 3.4 backend built with hexagonal architecture and CQRS. Currently in active development — see layer roadmap below.
 
-The project follows **hexagonal architecture** principles:
+## Tech stack
 
-```
-com.msj/
-├── domain/
-│   └── crypto/
-│       ├── Crypto.java           # Aggregate root
-│       ├── CryptoId.java         # Value object
-│       └── CryptoNotFoundException.java
-├── application/
-│   └── service/
-│       └── CryptoApplicationService.java  # Application service
-├── infrastructure/
-│   ├── ports/                    # Port interfaces
-│   │   └── crypto/
-│   │       ├── CryptoRepository.java       # Persistence port
-│   │       └── CryptoEventPublisher.java   # Event port
-│   └── adapters/                # Adapter implementations
-│       ├── persistence/
-│       │   └── JooqCryptoRepositoryAdapter.java
-│       └── kafka/
-│           └── KafkaCryptoEventPublisher.java
-├── controller/
-│   └── CryptoController.java     # REST API endpoints
-└── config/
-    └── KafkaConfig.java          # Infrastructure configuration
-```
+| Concern | Technology |
+|---|---|
+| Language | Java 21 (Eclipse Temurin LTS) |
+| Framework | Spring Boot 3.4 |
+| Architecture | Hexagonal + CQRS (modular monolith) |
+| Persistence (write) | PostgreSQL + JOOQ 3.19 (hand-written type-safe SQL) |
+| Persistence (read) | MongoDB (Layer 5+) |
+| DB migrations | Flyway |
+| IDs | TSID (hypersistence-tsid) — BIGINT in DB |
+| Event bus | Kafka (Layer 5+) |
+| Security | Spring Security + JWT (httpOnly cookies, refresh tokens) |
+| Market data | CoinGecko REST + Binance WebSocket |
+| Test coverage | JaCoCo — 80% minimum line coverage per package |
 
-## Tech Stack
-
-- **Java 25** - Latest JDK with modern language features
-- **Spring Boot 3.3.0** - Latest Spring Boot version
-- **PostgreSQL** - Relational database
-- **JOOQ 3.19.8** - Type-safe SQL builder and query DSL
-- **Flyway** - Database version control and migrations
-- **Apache Kafka** - Event streaming and message publishing
-- **JaCoCo 0.8.10** - Code coverage analysis (60% minimum coverage)
-- **Lombok** - Reduce boilerplate code
-- **JUnit 5 & Mockito** - Testing framework
-
-## Quick Start
+## Getting started
 
 ### Prerequisites
 
-- Java 25+
-- Maven 3.8.1+
+- Java 21+
+- Maven 3.8+
 - PostgreSQL 14+
-- Docker & Docker Compose (optional)
+- Docker (for Kafka + MongoDB in Layer 5+)
 
 ### Setup
 
-1. **Create PostgreSQL database:**
+1. Create the database:
    ```bash
-   createdb trading_core
+   createdb iris
    ```
 
-2. **Update database credentials** in `src/main/resources/application.properties`
-
-3. **Build the project:**
+2. Create your local properties file (gitignored):
    ```bash
-   mvn clean install
+   cp src/main/resources/application-local.properties.example src/main/resources/application-local.properties
+   # Then fill in jwt.secret — generate one with: openssl rand -base64 64
    ```
 
-4. **Run the application:**
+3. Run with the local profile:
    ```bash
-   mvn spring-boot:run
+   mvn spring-boot:run -Dspring-boot.run.profiles=local
    ```
 
-The application will start on `http://localhost:8080`
+The API starts on `http://localhost:8080`.
 
-## API Endpoints
+## API endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/v1/cryptos` | Create a new crypto |
-| GET | `/api/v1/cryptos` | Get all cryptos |
-| GET | `/api/v1/cryptos/{id}` | Get crypto by ID |
-| GET | `/api/v1/cryptos/symbol/{symbol}` | Get crypto by symbol |
-| PUT | `/api/v1/cryptos/{id}` | Update crypto |
-| DELETE | `/api/v1/cryptos/{id}` | Delete crypto |
+### Auth (`/api/v1/auth`)
 
-## Testing
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | `/register` | Public | Create account |
+| POST | `/login` | Public | Login, sets httpOnly JWT cookies |
+| POST | `/logout` | Required | Clear cookies |
+| POST | `/refresh` | Cookie | Issue new access token |
+| GET | `/users/me` | Required | Current user profile |
+
+### Market data (`/api/v1/market`)
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET | `/coins?limit=250` | Required | Top N coins by market cap |
+| GET | `/coins/{coinId}` | Required | Single coin price |
+
+## Architecture
+
+Bounded contexts:
+
+```
+com.msj/
+├── auth/          Layer 1 — JWT auth, user management, refresh tokens
+├── marketdata/    Layer 3 — CoinGecko REST + Binance WebSocket price feeds
+├── trading/       Layer 8 — Alpaca paper orders (planned)
+├── portfolio/     Layer 6 — positions, P&L (planned)
+├── alerting/      Layer 7 — rule engine, email alerts (planned)
+└── shared/        Shared kernel
+```
+
+Each context follows:
+```
+{bc}/
+├── domain/           Aggregates, value objects, domain exceptions
+├── application/
+│   ├── command/      Write side — mutates state
+│   └── query/        Read side — returns DTOs
+├── infrastructure/
+│   ├── ports/        Interfaces (repositories, providers)
+│   └── adapters/     JOOQ, HTTP clients, WebSocket
+└── api/              REST controllers + request/response DTOs
+```
+
+## Layer roadmap
+
+| Layer | Status | Description |
+|---|---|---|
+| 1 | Done | Auth backend — JWT httpOnly cookies, CQRS, hexagonal |
+| 2 | Done | Auth frontend — Vite + React 19, login/register |
+| 3 | Done | Market data backend — CoinGecko + Binance WebSocket, Caffeine cache |
+| 4 | Done | Market data frontend — AG Grid, 250 coins, live price feed |
+| 5 | Next | Kafka + MongoDB — price tick persistence, OHLCV candles, candlestick chart |
+| 6 | | Portfolio & positions |
+| 7 | | Alert engine — rules + email |
+| 8 | | Alpaca paper trading orders |
+| 9 | | Observability — Prometheus + Grafana, Loki, Tempo (OpenTelemetry) |
+| 10 | | SonarCloud, ArgoCD + Helm, Traefik |
+| 11 | | Kubernetes — minikube local → AWS EKS prod |
+
+## Commands
 
 ```bash
-mvn test
-mvn clean test  # With coverage report
+mvn clean install                                       # Full build + tests + coverage
+mvn spring-boot:run                                     # Run locally
+mvn test -Dtest=RegisterCommandHandlerTest              # Single test class
+open target/site/jacoco/index.html                      # Coverage report
 ```
 
-Coverage report: `target/site/jacoco/index.html`
+---
 
-## Database Migrations
-
-Flyway migrations are in `src/main/resources/db/migration/`. Add new migrations with naming convention `V{number}__Description.sql`
-
-## Kafka Configuration
-
-The application publishes events to:
-- `crypto-created` - When a crypto is created
-- `crypto-updated` - When a crypto is updated
-- `crypto-deleted` - When a crypto is deleted
-
-## JaCoCo Code Coverage
-
-Minimum line coverage: **60%**
-
-Configuration in `pom.xml`. Adjust threshold as needed.
-
-## Logging
-
-Configure in `application.properties`:
-```properties
-logging.level.com.msj=DEBUG
-logging.level.org.springframework.web=DEBUG
-```
-
-## Project Structure
-
-```
-trading-core/
-├── pom.xml
-├── README.md
-├── src/
-│   ├── main/
-│   │   ├── java/com/msj/
-│   │   │   ├── TradingCoreApplication.java
-│   │   │   ├── domain/
-│   │   │   ├── application/
-│   │   │   ├── infrastructure/
-│   │   │   ├── controller/
-│   │   │   └── config/
-│   │   └── resources/
-│   │       ├── application.properties
-│   │       └── db/migration/
-│   └── test/java/com/msj/
-└── target/
-```
-
-## Docker Compose for Local Development
-
-See `docker-compose.yml` for Kafka setup.
+© 2026 Mohamed Jmal. All rights reserved.
