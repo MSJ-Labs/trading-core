@@ -50,7 +50,8 @@ public class CoinGeckoAdapter implements MarketDataProvider {
                 r.priceChangePercentage24h(),
                 r.marketCap(),
                 r.totalVolume(),
-                r.lastUpdated() != null ? Instant.parse(r.lastUpdated()) : Instant.now()
+                r.lastUpdated() != null ? Instant.parse(r.lastUpdated()) : Instant.now(),
+                r.image()
         );
     }
 }

@@ -13,7 +13,8 @@ public record CoinPriceResponse(
         BigDecimal priceChangePercent24h,
         BigDecimal marketCapUsd,
         BigDecimal volume24h,
-        Instant lastUpdated
+        Instant lastUpdated,
+        String imageUrl
 ) {
     public static CoinPriceResponse from(CoinPrice coinPrice) {
         return new CoinPriceResponse(
@@ -24,7 +25,8 @@ public record CoinPriceResponse(
                 coinPrice.priceChangePercent24h(),
                 coinPrice.marketCapUsd(),
                 coinPrice.volume24h(),
-                coinPrice.lastUpdated()
+                coinPrice.lastUpdated(),
+                coinPrice.imageUrl()
         );
     }
 }

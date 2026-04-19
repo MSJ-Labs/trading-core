@@ -63,7 +63,8 @@ public class InMemoryPriceCache implements PriceCache {
                         coinPrice.priceChangePercent24h(),
                         coinPrice.marketCapUsd(),
                         coinPrice.volume24h(),
-                        timestamp
+                        timestamp,
+                        coinPrice.imageUrl()
                 ));
             }
         });

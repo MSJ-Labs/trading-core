@@ -11,5 +11,6 @@ public record CoinPrice(
         BigDecimal priceChangePercent24h,
         BigDecimal marketCapUsd,
         BigDecimal volume24h,
-        Instant lastUpdated
+        Instant lastUpdated,
+        String imageUrl
 ) {}
