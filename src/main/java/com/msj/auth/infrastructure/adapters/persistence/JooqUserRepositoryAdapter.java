@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Set;
 
-import static com.msj.infrastructure.jooq.Tables.*;
+import static com.msj.auth.infrastructure.adapters.persistence.Tables.*;
 
 @Slf4j
 @Component

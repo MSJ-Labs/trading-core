@@ -24,7 +24,7 @@ public class InMemoryPriceCache implements PriceCache {
 
     private final Cache<String, CoinPrice> coinCache = Caffeine.newBuilder()
             .expireAfterWrite(60, TimeUnit.SECONDS)
-            .maximumSize(200)
+            .maximumSize(250)
             .build();
 
     @Override

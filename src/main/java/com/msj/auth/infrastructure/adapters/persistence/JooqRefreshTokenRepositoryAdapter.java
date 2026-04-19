@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
-import static com.msj.infrastructure.jooq.Tables.REFRESH_TOKENS;
+import static com.msj.auth.infrastructure.adapters.persistence.Tables.REFRESH_TOKENS;
 
 @Component
 @RequiredArgsConstructor

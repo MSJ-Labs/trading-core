@@ -1,4 +1,4 @@
-package com.msj.infrastructure.jooq;
+package com.msj.auth.infrastructure.adapters.persistence;
 
 import org.jooq.Field;
 import org.jooq.impl.DSL;
