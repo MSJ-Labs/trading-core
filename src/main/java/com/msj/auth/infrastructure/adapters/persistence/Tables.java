@@ -1,4 +1,4 @@
-package com.msj.infrastructure.jooq;
+package com.msj.auth.infrastructure.adapters.persistence;
 
 import org.jooq.Field;
 import org.jooq.impl.DSL;
@@ -11,6 +11,7 @@ public class Tables {
     public static final Users USERS = new Users();
     public static final Roles ROLES = new Roles();
     public static final UserRoles USER_ROLES = new UserRoles();
+    public static final RefreshTokens REFRESH_TOKENS = new RefreshTokens();
 
     public static class Users extends TableImpl<org.jooq.Record> {
         public final Field<Long> ID = DSL.field(DSL.name("id"), org.jooq.impl.SQLDataType.BIGINT.notNull());
@@ -52,6 +53,19 @@ public class Tables {
 
         public UserRoles() {
             super(DSL.name("auth", "user_roles"));
+        }
+    }
+
+    public static class RefreshTokens extends TableImpl<org.jooq.Record> {
+        public final Field<String> TOKEN_HASH = DSL.field(DSL.name("token_hash"), org.jooq.impl.SQLDataType.VARCHAR(64).notNull());
+        public final Field<Long> USER_ID = DSL.field(DSL.name("user_id"), org.jooq.impl.SQLDataType.BIGINT.notNull());
+        public final Field<LocalDateTime> EXPIRES_AT = DSL.field(DSL.name("expires_at"), org.jooq.impl.SQLDataType.LOCALDATETIME.notNull());
+        public final Field<Boolean> REVOKED = DSL.field(DSL.name("revoked"), org.jooq.impl.SQLDataType.BOOLEAN.notNull());
+        public final Field<LocalDateTime> REVOKED_AT = DSL.field(DSL.name("revoked_at"), org.jooq.impl.SQLDataType.LOCALDATETIME);
+        public final Field<LocalDateTime> CREATED_AT = DSL.field(DSL.name("created_at"), org.jooq.impl.SQLDataType.LOCALDATETIME.notNull());
+
+        public RefreshTokens() {
+            super(DSL.name("auth", "refresh_tokens"));
         }
     }
 }

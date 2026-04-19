@@ -51,9 +51,11 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@AuthenticationPrincipal UserDetails principal,
+                                        HttpServletRequest request,
                                         HttpServletResponse response) {
         String username = principal != null ? principal.getUsername() : "anonymous";
-        logoutHandler.handle(username, response);
+        String refreshToken = cookieService.extractRefreshToken(request);
+        logoutHandler.handle(username, refreshToken, response);
         return ResponseEntity.noContent().build();
     }
 

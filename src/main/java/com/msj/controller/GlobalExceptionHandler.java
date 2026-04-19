@@ -3,6 +3,7 @@ package com.msj.controller;
 import com.msj.auth.domain.user.EmailAlreadyExistsException;
 import com.msj.auth.domain.user.UserNotFoundException;
 import com.msj.auth.domain.user.UsernameAlreadyExistsException;
+import com.msj.marketdata.domain.CoinNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<Object> handleUserNotFound(UserNotFoundException ex, WebRequest request) {
+        return error(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(CoinNotFoundException.class)
+    public ResponseEntity<Object> handleCoinNotFound(CoinNotFoundException ex, WebRequest request) {
         return error(HttpStatus.NOT_FOUND, ex.getMessage(), request);
     }
 

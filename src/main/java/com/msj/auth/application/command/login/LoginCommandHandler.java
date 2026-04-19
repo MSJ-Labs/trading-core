@@ -1,7 +1,9 @@
 package com.msj.auth.application.command.login;
 
+import com.msj.auth.domain.token.TokenHasher;
 import com.msj.auth.domain.user.User;
 import com.msj.auth.domain.user.UserNotFoundException;
+import com.msj.auth.infrastructure.ports.RefreshTokenRepository;
 import com.msj.auth.infrastructure.ports.UserRepository;
 import com.msj.auth.infrastructure.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ public class LoginCommandHandler {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Transactional
     public LoginResult handle(LoginCommand command) {
@@ -48,6 +51,12 @@ public class LoginCommandHandler {
 
         String accessToken = jwtTokenProvider.generateAccessToken(user.getUsername(), user.getRoles());
         String refreshToken = jwtTokenProvider.generateRefreshToken(user.getUsername(), user.getRoles());
+
+        refreshTokenRepository.save(
+                TokenHasher.hash(refreshToken),
+                user.getId(),
+                jwtTokenProvider.getExpirationFromToken(refreshToken)
+        );
 
         log.info("User logged in successfully: {}", command.username());
         return new LoginResult(accessToken, refreshToken, user);

@@ -2,6 +2,7 @@ package com.msj.auth.application.command.login;
 
 import com.msj.auth.domain.user.User;
 import com.msj.auth.domain.user.UserNotFoundException;
+import com.msj.auth.infrastructure.ports.RefreshTokenRepository;
 import com.msj.auth.infrastructure.ports.UserRepository;
 import com.msj.auth.infrastructure.security.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +15,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static com.msj.auth.support.UserTestFactory.*;
@@ -27,6 +29,7 @@ class LoginCommandHandlerTest {
     @Mock UserRepository userRepository;
     @Mock PasswordEncoder passwordEncoder;
     @Mock JwtTokenProvider jwtTokenProvider;
+    @Mock RefreshTokenRepository refreshTokenRepository;
     @InjectMocks LoginCommandHandler handler;
 
     private User activeUser;
@@ -43,6 +46,7 @@ class LoginCommandHandlerTest {
         when(userRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(jwtTokenProvider.generateAccessToken(eq("jdoe"), any())).thenReturn("access-token");
         when(jwtTokenProvider.generateRefreshToken(eq("jdoe"), any())).thenReturn("refresh-token");
+        when(jwtTokenProvider.getExpirationFromToken("refresh-token")).thenReturn(LocalDateTime.now().plusDays(7));
 
         LoginResult result = handler.handle(new LoginCommand("jdoe", "pass"));
 
