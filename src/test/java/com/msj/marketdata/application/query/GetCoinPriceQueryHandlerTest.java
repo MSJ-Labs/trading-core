@@ -32,10 +32,10 @@ class GetCoinPriceQueryHandlerTest {
 
     @Test
     void handle_returns_cached_price_without_hitting_provider() {
-        CoinPrice cached = fakeCoin("bitcoin");
-        when(priceCache.getCoinPrice("bitcoin")).thenReturn(Optional.of(cached));
+        CoinPrice cached = fakeCoin("xrp");
+        when(priceCache.getCoinPrice("xrp")).thenReturn(Optional.of(cached));
 
-        CoinPrice result = handler.handle(new GetCoinPriceQuery("bitcoin"));
+        CoinPrice result = handler.handle(new GetCoinPriceQuery("xrp"));
 
         assertThat(result).isEqualTo(cached);
         verifyNoInteractions(marketDataProvider);
@@ -76,6 +76,6 @@ class GetCoinPriceQueryHandlerTest {
     private CoinPrice fakeCoin(String coinId) {
         return new CoinPrice(coinId, coinId.toUpperCase(), coinId,
                 BigDecimal.valueOf(50000), BigDecimal.valueOf(2.5),
-                BigDecimal.valueOf(1_000_000_000), BigDecimal.valueOf(30_000_000), Instant.now());
+                BigDecimal.valueOf(1_000_000_000), BigDecimal.valueOf(30_000_000), Instant.now(), null);
     }
 }
