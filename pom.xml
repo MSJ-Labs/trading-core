@@ -181,6 +181,24 @@
             <artifactId>hypersistence-tsid</artifactId>
             <version>2.1.4</version>
         </dependency>
+
+        <!-- Kafka (Layer 5: price tick event streaming) -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+
+        <!-- Jackson Blackbird: replaces reflection with bytecode generation at startup -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-blackbird</artifactId>
+        </dependency>
+
+        <!-- MongoDB (Layer 5: price tick + OHLCV candle persistence) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -270,6 +288,8 @@
                                         <!-- External adapters (CoinGecko HTTP, Binance WebSocket) -->
                                         <exclude>com.msj.marketdata.infrastructure.adapters.coingecko</exclude>
                                         <exclude>com.msj.marketdata.infrastructure.adapters.binance</exclude>
+                                        <!-- Spring Data MongoDB repository interfaces (no testable logic) -->
+                                        <exclude>com.msj.marketdata.infrastructure.adapters.persistence.mongo</exclude>
                                     </excludes>
                                     <limits>
                                         <limit>

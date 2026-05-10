@@ -74,6 +74,6 @@ class GetTopCoinsQueryHandlerTest {
     private CoinPrice fakeCoin(String coinId) {
         return new CoinPrice(coinId, coinId.toUpperCase(), coinId,
                 BigDecimal.valueOf(50000), BigDecimal.valueOf(2.0),
-                BigDecimal.valueOf(1_000_000_000), BigDecimal.valueOf(30_000_000), Instant.now());
+                BigDecimal.valueOf(1_000_000_000), BigDecimal.valueOf(30_000_000), Instant.now(), null);
     }
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.msj.marketdata.domain.PriceUpdate;
 import com.msj.marketdata.infrastructure.ports.PriceCache;
+import com.msj.marketdata.infrastructure.ports.PriceTickPublisher;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class BinanceWebSocketClient {
     private final ObjectMapper objectMapper;
     private final SimpMessagingTemplate messagingTemplate;
     private final PriceCache priceCache;
+    private final PriceTickPublisher priceTickPublisher;
 
     private volatile WebSocket webSocket;
 
@@ -44,17 +46,18 @@ public class BinanceWebSocketClient {
         String url = properties.websocketUrl() + "?streams=" + streams;
         log.info("Connecting to Binance WebSocket streams: {}", streams);
 
-        HttpClient.newHttpClient()
-                .newWebSocketBuilder()
-                .buildAsync(URI.create(url), new BinanceListener())
-                .thenAccept(ws -> {
-                    this.webSocket = ws;
-                    log.info("Binance WebSocket connected");
-                })
-                .exceptionally(ex -> {
-                    log.warn("Binance WebSocket connection failed: {}", ex.getMessage());
-                    return null;
-                });
+        try (HttpClient httpClient = HttpClient.newHttpClient()) {
+            httpClient.newWebSocketBuilder()
+                    .buildAsync(URI.create(url), new BinanceListener())
+                    .thenAccept(ws -> {
+                        this.webSocket = ws;
+                        log.info("Binance WebSocket connected");
+                    })
+                    .exceptionally(ex -> {
+                        log.warn("Binance WebSocket connection failed: {}", ex.getMessage());
+                        return null;
+                    });
+        }
     }
 
     @PreDestroy
@@ -84,8 +87,10 @@ public class BinanceWebSocketClient {
             BinanceMiniTickerMessage ticker = objectMapper.treeToValue(node, BinanceMiniTickerMessage.class);
             if (ticker.closePrice() == null) return;
             Instant ts = ticker.eventTime() != null ? Instant.ofEpochMilli(ticker.eventTime()) : Instant.now();
+            PriceUpdate tick = new PriceUpdate(ticker.symbol(), ticker.closePrice(), ts);
             priceCache.updatePrice(ticker.symbol(), ticker.closePrice(), ts);
-            messagingTemplate.convertAndSend("/topic/prices", new PriceUpdate(ticker.symbol(), ticker.closePrice(), ts));
+            messagingTemplate.convertAndSend("/topic/prices", tick);
+            priceTickPublisher.publish(tick);
             log.debug("Price update broadcast: {} = {}", ticker.symbol(), ticker.closePrice());
         } catch (Exception e) {
             log.warn("Failed to process ticker node: {}", e.getMessage());

@@ -193,6 +193,8 @@ Frontend: candlestick chart on coin row click using **TradingView Lightweight Ch
 
 **Approach**: go slowly — master Kafka and MongoDB step by step. Start with Docker Compose, then producer, then consumers, then read model queries, then chart UI.
 
+**Kafka serialization**: JSON (`JsonSerializer`/`JsonDeserializer`) for now — producer and consumer are in the same JVM so no schema contract is needed. **Migrate to Avro + Confluent Schema Registry when `marketdata` is extracted to its own microservice** (or when another bounded context like `alerting` or `trading` consumes the same topic from a separate service). Migration path: add Schema Registry to docker-compose, add Avro Maven plugin, write `.avsc` schema files, swap serializers in config. Drop and recreate the topic on cutover (market data is ephemeral, no historical loss).
+
 ## marketdata/ bounded context (Layer 3+4 — completed)
 
 ### Two WebSocket connections

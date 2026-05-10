@@ -102,6 +102,6 @@ class InMemoryPriceCacheTest {
     private CoinPrice fakeCoin(String coinId, String symbol) {
         return new CoinPrice(coinId, symbol, coinId,
                 BigDecimal.valueOf(50_000), BigDecimal.valueOf(1.5),
-                BigDecimal.valueOf(1_000_000_000), BigDecimal.valueOf(20_000_000), Instant.now());
+                BigDecimal.valueOf(1_000_000_000), BigDecimal.valueOf(20_000_000), Instant.now(), null);
     }
 }
