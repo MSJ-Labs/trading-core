@@ -73,8 +73,8 @@ GET /api/v1/users/me
 
 | Concern | Technology |
 |---|---|
-| Language | Java 21 (Eclipse Temurin LTS) |
-| Framework | Spring Boot 3.4 |
+| Language | Java 25 (Eclipse Temurin LTS) |
+| Framework | Spring Boot 3.5 |
 | Persistence (write) | JOOQ 3.19 (type-safe SQL, no code-gen — hand-written `Tables.java`) |
 | Persistence (read, Layer 5+) | MongoDB |
 | DB migrations | Flyway — DDL managed exclusively here |
