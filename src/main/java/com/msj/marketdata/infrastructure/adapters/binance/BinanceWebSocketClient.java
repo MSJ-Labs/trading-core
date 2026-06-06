@@ -30,6 +30,7 @@ public class BinanceWebSocketClient {
     private final PriceCache priceCache;
     private final PriceTickPublisher priceTickPublisher;
 
+    private final HttpClient httpClient = HttpClient.newHttpClient();
     private volatile WebSocket webSocket;
 
     /**
@@ -46,18 +47,16 @@ public class BinanceWebSocketClient {
         String url = properties.websocketUrl() + "?streams=" + streams;
         log.info("Connecting to Binance WebSocket streams: {}", streams);
 
-        try (HttpClient httpClient = HttpClient.newHttpClient()) {
-            httpClient.newWebSocketBuilder()
-                    .buildAsync(URI.create(url), new BinanceListener())
-                    .thenAccept(ws -> {
-                        this.webSocket = ws;
-                        log.info("Binance WebSocket connected");
-                    })
-                    .exceptionally(ex -> {
-                        log.warn("Binance WebSocket connection failed: {}", ex.getMessage());
-                        return null;
-                    });
-        }
+        httpClient.newWebSocketBuilder()
+                .buildAsync(URI.create(url), new BinanceListener())
+                .thenAccept(ws -> {
+                    this.webSocket = ws;
+                    log.info("Binance WebSocket connected");
+                })
+                .exceptionally(ex -> {
+                    log.warn("Binance WebSocket connection failed: {}", ex.getMessage());
+                    return null;
+                });
     }
 
     @PreDestroy
@@ -66,6 +65,7 @@ public class BinanceWebSocketClient {
         if (ws != null && !ws.isOutputClosed()) {
             ws.sendClose(WebSocket.NORMAL_CLOSURE, "shutdown");
         }
+        httpClient.close();
     }
 
     private void handleMessage(String text) {
