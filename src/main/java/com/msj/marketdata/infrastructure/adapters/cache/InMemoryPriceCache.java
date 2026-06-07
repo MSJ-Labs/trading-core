@@ -3,11 +3,10 @@ package com.msj.marketdata.infrastructure.adapters.cache;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.msj.marketdata.domain.CoinPrice;
+import com.msj.marketdata.domain.PriceUpdate;
 import com.msj.marketdata.infrastructure.ports.PriceCache;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -50,22 +49,12 @@ public class InMemoryPriceCache implements PriceCache {
     }
 
     @Override
-    public void updatePrice(String symbol, BigDecimal price, Instant timestamp) {
+    public void updatePrice(PriceUpdate tick) {
         coinCache.asMap().forEach((coinId, coinPrice) -> {
-            boolean matchesSymbol = coinPrice.symbol().equalsIgnoreCase(symbol);
-            boolean matchesSymbolWithUsdt = (coinPrice.symbol() + "USDT").equalsIgnoreCase(symbol);
+            boolean matchesSymbol = coinPrice.symbol().equalsIgnoreCase(tick.symbol());
+            boolean matchesSymbolWithUsdt = (coinPrice.symbol() + "USDT").equalsIgnoreCase(tick.symbol());
             if (matchesSymbol || matchesSymbolWithUsdt) {
-                coinCache.put(coinId, new CoinPrice(
-                        coinPrice.coinId(),
-                        coinPrice.symbol(),
-                        coinPrice.name(),
-                        price,
-                        coinPrice.priceChangePercent24h(),
-                        coinPrice.marketCapUsd(),
-                        coinPrice.volume24h(),
-                        timestamp,
-                        coinPrice.imageUrl()
-                ));
+                coinCache.put(coinId, coinPrice.withUpdatedPrice(tick));
             }
         });
     }

@@ -1,5 +1,6 @@
 package com.msj.marketdata.infrastructure.adapters.kafka;
 
+import com.msj.marketdata.application.command.OhlcvAggregationUseCase;
 import com.msj.marketdata.domain.PriceUpdate;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,17 +17,17 @@ import static org.mockito.Mockito.verify;
 class OhlcvConsumerTest {
 
     @Mock
-    private OhlcvAggregator aggregator;
+    private OhlcvAggregationUseCase ohlcvAggregationUseCase;
 
     @InjectMocks
     private OhlcvConsumer consumer;
 
     @Test
-    void consume_delegatesToAggregator() {
+    void consume_delegatesToAggregationUseCase() {
         PriceUpdate tick = new PriceUpdate("BTCUSDT", new BigDecimal("65000"), Instant.now());
 
         consumer.consume(tick);
 
-        verify(aggregator).onTick(tick);
+        verify(ohlcvAggregationUseCase).onTick(tick);
     }
 }

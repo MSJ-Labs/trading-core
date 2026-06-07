@@ -1,7 +1,7 @@
 package com.msj.marketdata.infrastructure.ports;
 
-import com.msj.marketdata.infrastructure.adapters.persistence.mongo.OhlcvDocument;
+import com.msj.marketdata.domain.OhlcvCandle;
 
 public interface OhlcvRepository {
-    void save(OhlcvDocument candle);
+    void save(OhlcvCandle candle);
 }

@@ -42,16 +42,16 @@ public class CoinGeckoAdapter implements MarketDataProvider {
     }
 
     private CoinPrice toDomain(CoinGeckoMarketResponse r) {
-        return new CoinPrice(
-                r.id(),
-                r.symbol().toUpperCase(),
-                r.name(),
-                r.currentPrice(),
-                r.priceChangePercentage24h(),
-                r.marketCap(),
-                r.totalVolume(),
-                r.lastUpdated() != null ? Instant.parse(r.lastUpdated()) : Instant.now(),
-                r.image()
-        );
+        return CoinPrice.builder()
+                .id(r.id())
+                .symbol(r.symbol().toUpperCase())
+                .name(r.name())
+                .priceUsd(r.currentPrice())
+                .priceChangePercent24h(r.priceChangePercentage24h())
+                .marketCapUsd(r.marketCap())
+                .volume24h(r.totalVolume())
+                .lastUpdated(r.lastUpdated() != null ? Instant.parse(r.lastUpdated()) : Instant.now())
+                .imageUrl(r.image())
+                .build();
     }
 }
