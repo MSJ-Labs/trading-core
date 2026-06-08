@@ -2,20 +2,20 @@
 
 > Personal crypto trading platform. Real-time price monitoring, alert engine, paper trading → real orders.
 
-Spring Boot 3.4 backend built with hexagonal architecture and CQRS. Currently in active development — see layer roadmap below.
+Spring Boot 3.5 backend built with hexagonal architecture and CQRS. Currently in active development — see layer roadmap below.
 
 ## Tech stack
 
 | Concern | Technology |
 |---|---|
-| Language | Java 21 (Eclipse Temurin LTS) |
-| Framework | Spring Boot 3.4 |
+| Language | Java 25 (Eclipse Temurin LTS) |
+| Framework | Spring Boot 3.5 |
 | Architecture | Hexagonal + CQRS (modular monolith) |
 | Persistence (write) | PostgreSQL + JOOQ 3.19 (hand-written type-safe SQL) |
-| Persistence (read) | MongoDB (Layer 5+) |
+| Persistence (read) | MongoDB 7.0 |
 | DB migrations | Flyway |
 | IDs | TSID (hypersistence-tsid) — BIGINT in DB |
-| Event bus | Kafka (Layer 5+) |
+| Event bus | Kafka (Confluent KRaft, no ZooKeeper) |
 | Security | Spring Security + JWT (httpOnly cookies, refresh tokens) |
 | Market data | CoinGecko REST + Binance WebSocket |
 | Test coverage | JaCoCo — 80% minimum line coverage per package |
@@ -24,22 +24,21 @@ Spring Boot 3.4 backend built with hexagonal architecture and CQRS. Currently in
 
 ### Prerequisites
 
-- Java 21+
-- Maven 3.8+
-- PostgreSQL 14+
-- Docker (for Kafka + MongoDB in Layer 5+)
+- Java 25 (Eclipse Temurin)
+- Maven 3.9+
+- Docker + Docker Compose
 
 ### Setup
 
-1. Create the database:
+1. Start all infrastructure services (PostgreSQL, Kafka, MongoDB):
    ```bash
-   createdb iris
+   docker compose up -d
    ```
 
 2. Create your local properties file (gitignored):
    ```bash
    cp src/main/resources/application-local.properties.example src/main/resources/application-local.properties
-   # Then fill in jwt.secret — generate one with: openssl rand -base64 64
+   # Fill in jwt.secret — generate one with: openssl rand -base64 64
    ```
 
 3. Run with the local profile:
@@ -48,6 +47,14 @@ Spring Boot 3.4 backend built with hexagonal architecture and CQRS. Currently in
    ```
 
 The API starts on `http://localhost:8080`.
+
+### Infrastructure ports
+
+| Service | Port |
+|---|---|
+| PostgreSQL | 5432 |
+| Kafka | 9092 |
+| MongoDB | 27017 |
 
 ## API endpoints
 
@@ -67,6 +74,7 @@ The API starts on `http://localhost:8080`.
 |---|---|---|---|
 | GET | `/coins?limit=250` | Required | Top N coins by market cap |
 | GET | `/coins/{coinId}` | Required | Single coin price |
+| GET | `/coins/{coinId}/candles?interval=1m&from=&to=` | Required | OHLCV candles from MongoDB |
 
 ## Architecture
 
@@ -103,7 +111,7 @@ Each context follows:
 | 2 | Done | Auth frontend — Vite + React 19, login/register |
 | 3 | Done | Market data backend — CoinGecko + Binance WebSocket, Caffeine cache |
 | 4 | Done | Market data frontend — AG Grid, 250 coins, live price feed |
-| 5 | Next | Kafka + MongoDB — price tick persistence, OHLCV candles, candlestick chart |
+| 5 | In progress | Kafka + MongoDB — price tick persistence, OHLCV candles, candlestick chart |
 | 6 | | Portfolio & positions |
 | 7 | | Alert engine — rules + email |
 | 8 | | Alpaca paper trading orders |

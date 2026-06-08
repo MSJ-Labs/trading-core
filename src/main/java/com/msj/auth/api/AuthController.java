@@ -6,6 +6,7 @@ import com.msj.auth.api.dto.UserProfileResponse;
 import com.msj.auth.application.command.login.LoginCommand;
 import com.msj.auth.application.command.login.LoginCommandHandler;
 import com.msj.auth.application.command.login.LoginResult;
+import com.msj.auth.application.command.logout.LogoutCommand;
 import com.msj.auth.application.command.logout.LogoutCommandHandler;
 import com.msj.auth.application.command.refresh.RefreshTokenCommand;
 import com.msj.auth.application.command.refresh.RefreshTokenCommandHandler;
@@ -55,7 +56,8 @@ public class AuthController {
                                         HttpServletResponse response) {
         String username = principal != null ? principal.getUsername() : "anonymous";
         String refreshToken = cookieService.extractRefreshToken(request);
-        logoutHandler.handle(username, refreshToken, response);
+        logoutHandler.handle(new LogoutCommand(username, refreshToken));
+        cookieService.clearAuthCookies(response);
         return ResponseEntity.noContent().build();
     }
 

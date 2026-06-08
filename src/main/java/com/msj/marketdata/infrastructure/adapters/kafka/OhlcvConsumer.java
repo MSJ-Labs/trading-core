@@ -1,5 +1,6 @@
 package com.msj.marketdata.infrastructure.adapters.kafka;
 
+import com.msj.marketdata.application.command.OhlcvAggregationUseCase;
 import com.msj.marketdata.domain.PriceUpdate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,11 +12,11 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class OhlcvConsumer {
 
-    private final OhlcvAggregator aggregator;
+    private final OhlcvAggregationUseCase ohlcvAggregationUseCase;
 
     @KafkaListener(topics = PriceTickProducer.TOPIC, groupId = "ohlcv-aggregator")
     public void consume(PriceUpdate tick) {
-        aggregator.onTick(tick);
+        ohlcvAggregationUseCase.onTick(tick);
         log.debug("Aggregated tick: {} = {}", tick.symbol(), tick.price());
     }
 }

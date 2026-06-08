@@ -1,6 +1,7 @@
 package com.msj.marketdata.infrastructure.adapters.cache;
 
 import com.msj.marketdata.domain.CoinPrice;
+import com.msj.marketdata.domain.PriceUpdate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -59,7 +60,7 @@ class InMemoryPriceCacheTest {
     void updatePrice_updates_cached_entry_matching_symbol_exactly() {
         cache.putCoinPrice(fakeCoin("bitcoin", "BTC"));
 
-        cache.updatePrice("BTC", BigDecimal.valueOf(100_000), Instant.now());
+        cache.updatePrice(new PriceUpdate("BTC", BigDecimal.valueOf(100_000), Instant.now()));
 
         assertThat(cache.getCoinPrice("bitcoin"))
                 .isPresent()
@@ -70,7 +71,7 @@ class InMemoryPriceCacheTest {
     void updatePrice_matches_symbol_plus_usdt_suffix() {
         cache.putCoinPrice(fakeCoin("ethereum", "ETH"));
 
-        cache.updatePrice("ETHUSDT", BigDecimal.valueOf(3_500), Instant.now());
+        cache.updatePrice(new PriceUpdate("ETHUSDT", BigDecimal.valueOf(3_500), Instant.now()));
 
         assertThat(cache.getCoinPrice("ethereum"))
                 .isPresent()
@@ -81,7 +82,7 @@ class InMemoryPriceCacheTest {
     void updatePrice_is_case_insensitive() {
         cache.putCoinPrice(fakeCoin("solana", "SOL"));
 
-        cache.updatePrice("sol", BigDecimal.valueOf(200), Instant.now());
+        cache.updatePrice(new PriceUpdate("sol", BigDecimal.valueOf(200), Instant.now()));
 
         assertThat(cache.getCoinPrice("solana"))
                 .isPresent()
@@ -92,7 +93,7 @@ class InMemoryPriceCacheTest {
     void updatePrice_does_nothing_when_no_matching_symbol() {
         cache.putCoinPrice(fakeCoin("bitcoin", "BTC"));
 
-        cache.updatePrice("ETHUSDT", BigDecimal.valueOf(3_000), Instant.now());
+        cache.updatePrice(new PriceUpdate("ETHUSDT", BigDecimal.valueOf(3_000), Instant.now()));
 
         assertThat(cache.getCoinPrice("bitcoin"))
                 .isPresent()
@@ -100,8 +101,11 @@ class InMemoryPriceCacheTest {
     }
 
     private CoinPrice fakeCoin(String coinId, String symbol) {
-        return new CoinPrice(coinId, symbol, coinId,
-                BigDecimal.valueOf(50_000), BigDecimal.valueOf(1.5),
-                BigDecimal.valueOf(1_000_000_000), BigDecimal.valueOf(20_000_000), Instant.now(), null);
+        return CoinPrice.builder()
+                .id(coinId).symbol(symbol).name(coinId)
+                .priceUsd(BigDecimal.valueOf(50_000)).priceChangePercent24h(BigDecimal.valueOf(1.5))
+                .marketCapUsd(BigDecimal.valueOf(1_000_000_000)).volume24h(BigDecimal.valueOf(20_000_000))
+                .lastUpdated(Instant.now()).imageUrl(null)
+                .build();
     }
 }

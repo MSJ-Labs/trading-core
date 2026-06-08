@@ -18,18 +18,4 @@ public record OhlcvDocument(
         BigDecimal low,
         BigDecimal close,
         int priceUpdateCount
-) {
-    public static OhlcvDocument create(String symbol, Instant openTime, BigDecimal firstPrice) {
-        return new OhlcvDocument(null, symbol, openTime, firstPrice, firstPrice, firstPrice, firstPrice, 1);
-    }
-
-    public OhlcvDocument withTick(BigDecimal price) {
-        return new OhlcvDocument(
-                id, symbol, openTime, open,
-                price.compareTo(high) > 0 ? price : high,
-                price.compareTo(low) < 0 ? price : low,
-                price,
-                priceUpdateCount + 1
-        );
-    }
-}
+) {}

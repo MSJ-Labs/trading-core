@@ -2,14 +2,12 @@ package com.msj.marketdata.infrastructure.adapters.binance;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.msj.marketdata.domain.PriceUpdate;
-import com.msj.marketdata.infrastructure.ports.PriceCache;
-import com.msj.marketdata.infrastructure.ports.PriceTickPublisher;
+import com.msj.marketdata.application.command.PriceTickCommand;
+import com.msj.marketdata.application.command.PriceTickUseCase;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -17,6 +15,7 @@ import java.net.http.HttpClient;
 import java.net.http.WebSocket;
 import java.time.Instant;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -26,11 +25,11 @@ public class BinanceWebSocketClient {
 
     private final BinanceProperties properties;
     private final ObjectMapper objectMapper;
-    private final SimpMessagingTemplate messagingTemplate;
-    private final PriceCache priceCache;
-    private final PriceTickPublisher priceTickPublisher;
+    private final PriceTickUseCase priceTickUseCase;
 
-    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final HttpClient httpClient = HttpClient.newBuilder()
+            .executor(Executors.newVirtualThreadPerTaskExecutor())
+            .build();
     private volatile WebSocket webSocket;
 
     /**
@@ -87,11 +86,7 @@ public class BinanceWebSocketClient {
             BinanceMiniTickerMessage ticker = objectMapper.treeToValue(node, BinanceMiniTickerMessage.class);
             if (ticker.closePrice() == null) return;
             Instant ts = ticker.eventTime() != null ? Instant.ofEpochMilli(ticker.eventTime()) : Instant.now();
-            PriceUpdate tick = new PriceUpdate(ticker.symbol(), ticker.closePrice(), ts);
-            priceCache.updatePrice(ticker.symbol(), ticker.closePrice(), ts);
-            messagingTemplate.convertAndSend("/topic/prices", tick);
-            priceTickPublisher.publish(tick);
-            log.debug("Price update broadcast: {} = {}", ticker.symbol(), ticker.closePrice());
+            priceTickUseCase.handle(new PriceTickCommand(ticker.symbol(), ticker.closePrice(), ts));
         } catch (Exception e) {
             log.warn("Failed to process ticker node: {}", e.getMessage());
         }

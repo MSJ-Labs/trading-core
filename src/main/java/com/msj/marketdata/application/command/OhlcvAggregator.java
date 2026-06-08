@@ -1,22 +1,23 @@
-package com.msj.marketdata.infrastructure.adapters.kafka;
+package com.msj.marketdata.application.command;
 
+import com.msj.marketdata.domain.OhlcvCandle;
 import com.msj.marketdata.domain.PriceUpdate;
-import com.msj.marketdata.infrastructure.adapters.persistence.mongo.OhlcvDocument;
 import com.msj.marketdata.infrastructure.ports.OhlcvRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Component
+@Service
 @RequiredArgsConstructor
-public class OhlcvAggregator {
+public class OhlcvAggregator implements OhlcvAggregationUseCase {
 
     private final OhlcvRepository ohlcvRepository;
-    private final ConcurrentHashMap<String, OhlcvDocument> openCandles = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, OhlcvCandle> openCandles = new ConcurrentHashMap<>();
 
+    @Override
     public void onTick(PriceUpdate tick) {
         Instant bucketStart = minuteBucket(tick.timestamp());
         openCandles.compute(tick.symbol(), (symbol, current) -> {
@@ -24,13 +25,13 @@ public class OhlcvAggregator {
                 if (current != null) {
                     ohlcvRepository.save(current);
                 }
-                return OhlcvDocument.create(symbol, bucketStart, tick.price());
+                return OhlcvCandle.create(symbol, bucketStart, tick.price());
             }
             return current.withTick(tick.price());
         });
     }
 
-    Optional<OhlcvDocument> currentCandle(String symbol) {
+    Optional<OhlcvCandle> currentCandle(String symbol) {
         return Optional.ofNullable(openCandles.get(symbol));
     }
 
