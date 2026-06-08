@@ -14,6 +14,7 @@ public abstract class AggregateRoot<ID> extends Entity<ID> {
 
     protected AggregateRoot(ID id) {
         super(id);
+        this.domainEvents = new ArrayList<>();
     }
 
     protected void registerEvent(DomainEvent event) {

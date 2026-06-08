@@ -5,6 +5,7 @@ import com.msj.auth.infrastructure.ports.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @Slf4j
 @Service
@@ -15,7 +16,7 @@ public class LogoutCommandHandler {
 
     public void handle(LogoutCommand command) {
         log.info("Logging out user: {}", command.username());
-        if (command.rawRefreshToken() != null && !command.rawRefreshToken().isBlank()) {
+        if (StringUtils.hasLength(command.rawRefreshToken())) {
             refreshTokenRepository.revoke(TokenHasher.hash(command.rawRefreshToken()));
         }
     }

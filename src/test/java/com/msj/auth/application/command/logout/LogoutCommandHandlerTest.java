@@ -35,8 +35,8 @@ class LogoutCommandHandlerTest {
     }
 
     @Test
-    void handle_skipsRevocationWhenRefreshTokenIsBlank() {
-        handler.handle(new LogoutCommand("jdoe", "  "));
+    void handle_skipsRevocationWhenRefreshTokenIsEmpty() {
+        handler.handle(new LogoutCommand("jdoe", ""));
 
         verify(refreshTokenRepository, never()).revoke(anyString());
     }
