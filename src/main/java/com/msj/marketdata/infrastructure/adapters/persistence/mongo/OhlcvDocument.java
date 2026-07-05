@@ -1,5 +1,6 @@
 package com.msj.marketdata.infrastructure.adapters.persistence.mongo;
 
+import com.msj.marketdata.domain.OhlcvCandle;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -18,4 +19,18 @@ public record OhlcvDocument(
         BigDecimal low,
         BigDecimal close,
         int priceUpdateCount
-) {}
+) {
+    static OhlcvDocument from(OhlcvCandle candle) {
+        String id = candle.symbol() + "_" + candle.openTime().toEpochMilli();
+        return new OhlcvDocument(
+                id,
+                candle.symbol(),
+                candle.openTime(),
+                candle.open(),
+                candle.high(),
+                candle.low(),
+                candle.close(),
+                candle.priceUpdateCount()
+        );
+    }
+}

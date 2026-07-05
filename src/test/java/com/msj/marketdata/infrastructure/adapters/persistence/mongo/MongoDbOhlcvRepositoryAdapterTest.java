@@ -25,18 +25,15 @@ class MongoDbOhlcvRepositoryAdapterTest {
 
     @Test
     void save_maps_candle_to_document_and_delegates_to_repository() {
-        OhlcvCandle candle = OhlcvCandle.create(
-                "BTCUSDT",
-                Instant.parse("2026-05-10T10:00:00Z"),
-                new BigDecimal("65000")
-        );
+        Instant openTime = Instant.parse("2026-05-10T10:00:00Z");
+        OhlcvCandle candle = OhlcvCandle.create("BTCUSDT", openTime, new BigDecimal("65000"));
 
         adapter.save(candle);
 
         ArgumentCaptor<OhlcvDocument> captor = ArgumentCaptor.forClass(OhlcvDocument.class);
         verify(repository).save(captor.capture());
         OhlcvDocument doc = captor.getValue();
-        assertThat(doc.id()).isNull();
+        assertThat(doc.id()).isEqualTo("BTCUSDT_" + openTime.toEpochMilli());
         assertThat(doc.symbol()).isEqualTo("BTCUSDT");
         assertThat(doc.open()).isEqualByComparingTo("65000");
         assertThat(doc.close()).isEqualByComparingTo("65000");

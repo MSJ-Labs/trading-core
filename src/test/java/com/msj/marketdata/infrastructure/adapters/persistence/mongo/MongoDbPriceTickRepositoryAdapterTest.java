@@ -33,7 +33,7 @@ class MongoDbPriceTickRepositoryAdapterTest {
         ArgumentCaptor<PriceTickDocument> captor = ArgumentCaptor.forClass(PriceTickDocument.class);
         verify(repository).save(captor.capture());
         PriceTickDocument doc = captor.getValue();
-        assertThat(doc.id()).isNull();
+        assertThat(doc.id()).isEqualTo("BTCUSDT_" + now.toEpochMilli());
         assertThat(doc.symbol()).isEqualTo("BTCUSDT");
         assertThat(doc.price()).isEqualByComparingTo("65000.00");
         assertThat(doc.timestamp()).isEqualTo(now);
