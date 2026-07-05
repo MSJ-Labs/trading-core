@@ -3,7 +3,6 @@ package com.msj.marketdata.infrastructure.adapters.cache;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.msj.marketdata.domain.CoinPrice;
-import com.msj.marketdata.domain.PriceUpdate;
 import com.msj.marketdata.infrastructure.ports.PriceCache;
 import org.springframework.stereotype.Component;
 
@@ -49,13 +48,15 @@ public class InMemoryPriceCache implements PriceCache {
     }
 
     @Override
-    public void updatePrice(PriceUpdate tick) {
-        coinCache.asMap().forEach((coinId, coinPrice) -> {
-            boolean matchesSymbol = coinPrice.symbol().equalsIgnoreCase(tick.symbol());
-            boolean matchesSymbolWithUsdt = (coinPrice.symbol() + "USDT").equalsIgnoreCase(tick.symbol());
-            if (matchesSymbol || matchesSymbolWithUsdt) {
-                coinCache.put(coinId, coinPrice.withUpdatedPrice(tick));
-            }
-        });
+    public List<CoinPrice> findBySymbol(String symbol) {
+        return coinCache.asMap().values().stream()
+                .filter(coinPrice -> matches(coinPrice, symbol))
+                .toList();
+    }
+
+    private static boolean matches(CoinPrice coinPrice, String symbol) {
+        boolean matchesSymbol = coinPrice.symbol().equalsIgnoreCase(symbol);
+        boolean matchesSymbolWithUsdt = (coinPrice.symbol() + "USDT").equalsIgnoreCase(symbol);
+        return matchesSymbol || matchesSymbolWithUsdt;
     }
 }

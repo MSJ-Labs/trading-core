@@ -13,15 +13,6 @@ public class MongoDbOhlcvRepositoryAdapter implements OhlcvRepository {
 
     @Override
     public void save(OhlcvCandle candle) {
-        repository.save(new OhlcvDocument(
-                null,
-                candle.symbol(),
-                candle.openTime(),
-                candle.open(),
-                candle.high(),
-                candle.low(),
-                candle.close(),
-                candle.priceUpdateCount()
-        ));
+        repository.save(OhlcvDocument.from(candle));
     }
 }

@@ -17,6 +17,7 @@ public record PriceTickDocument(
         Instant timestamp
 ) {
     static PriceTickDocument from(PriceUpdate tick) {
-        return new PriceTickDocument(null, tick.symbol(), tick.price(), tick.timestamp());
+        String id = tick.symbol() + "_" + tick.timestamp().toEpochMilli();
+        return new PriceTickDocument(id, tick.symbol(), tick.price(), tick.timestamp());
     }
 }

@@ -1,7 +1,6 @@
 package com.msj.marketdata.infrastructure.adapters.cache;
 
 import com.msj.marketdata.domain.CoinPrice;
-import com.msj.marketdata.domain.PriceUpdate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -57,47 +56,37 @@ class InMemoryPriceCacheTest {
     }
 
     @Test
-    void updatePrice_updates_cached_entry_matching_symbol_exactly() {
+    void findBySymbol_matches_symbol_exactly() {
         cache.putCoinPrice(fakeCoin("bitcoin", "BTC"));
 
-        cache.updatePrice(new PriceUpdate("BTC", BigDecimal.valueOf(100_000), Instant.now()));
-
-        assertThat(cache.getCoinPrice("bitcoin"))
-                .isPresent()
-                .hasValueSatisfying(c -> assertThat(c.priceUsd()).isEqualByComparingTo("100000"));
+        assertThat(cache.findBySymbol("BTC"))
+                .extracting(CoinPrice::coinId)
+                .containsExactly("bitcoin");
     }
 
     @Test
-    void updatePrice_matches_symbol_plus_usdt_suffix() {
+    void findBySymbol_matches_symbol_plus_usdt_suffix() {
         cache.putCoinPrice(fakeCoin("ethereum", "ETH"));
 
-        cache.updatePrice(new PriceUpdate("ETHUSDT", BigDecimal.valueOf(3_500), Instant.now()));
-
-        assertThat(cache.getCoinPrice("ethereum"))
-                .isPresent()
-                .hasValueSatisfying(c -> assertThat(c.priceUsd()).isEqualByComparingTo("3500"));
+        assertThat(cache.findBySymbol("ETHUSDT"))
+                .extracting(CoinPrice::coinId)
+                .containsExactly("ethereum");
     }
 
     @Test
-    void updatePrice_is_case_insensitive() {
+    void findBySymbol_is_case_insensitive() {
         cache.putCoinPrice(fakeCoin("solana", "SOL"));
 
-        cache.updatePrice(new PriceUpdate("sol", BigDecimal.valueOf(200), Instant.now()));
-
-        assertThat(cache.getCoinPrice("solana"))
-                .isPresent()
-                .hasValueSatisfying(c -> assertThat(c.priceUsd()).isEqualByComparingTo("200"));
+        assertThat(cache.findBySymbol("sol"))
+                .extracting(CoinPrice::coinId)
+                .containsExactly("solana");
     }
 
     @Test
-    void updatePrice_does_nothing_when_no_matching_symbol() {
+    void findBySymbol_returns_empty_when_no_matching_symbol() {
         cache.putCoinPrice(fakeCoin("bitcoin", "BTC"));
 
-        cache.updatePrice(new PriceUpdate("ETHUSDT", BigDecimal.valueOf(3_000), Instant.now()));
-
-        assertThat(cache.getCoinPrice("bitcoin"))
-                .isPresent()
-                .hasValueSatisfying(c -> assertThat(c.priceUsd()).isEqualByComparingTo("50000"));
+        assertThat(cache.findBySymbol("ETHUSDT")).isEmpty();
     }
 
     private CoinPrice fakeCoin(String coinId, String symbol) {
