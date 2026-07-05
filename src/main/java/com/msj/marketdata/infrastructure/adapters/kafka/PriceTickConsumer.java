@@ -24,8 +24,8 @@ public class PriceTickConsumer {
 
     @RetryableTopic(
             attempts = "4",
-            backoff = @Backoff(delay = 1000, multiplier = 2.0, maxDelay = 10000),
-            autoCreateTopics = "true")
+            backoff = @Backoff(delay = 1000, multiplier = 2.0, maxDelay = 10000)
+    )
     @KafkaListener(topics = PriceTickProducer.TOPIC, groupId = "tick-persister")
     public void consume(PriceUpdate tick) {
         persistPriceTickUseCase.handle(new PersistPriceTickCommand(tick.symbol(), tick.price(), tick.timestamp()));

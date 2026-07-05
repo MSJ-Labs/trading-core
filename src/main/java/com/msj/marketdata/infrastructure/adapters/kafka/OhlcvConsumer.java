@@ -23,8 +23,8 @@ public class OhlcvConsumer {
 
     @RetryableTopic(
             attempts = "4",
-            backoff = @Backoff(delay = 1000, multiplier = 2.0, maxDelay = 10000),
-            autoCreateTopics = "true")
+            backoff = @Backoff(delay = 1000, multiplier = 2.0, maxDelay = 10000)
+    )
     @KafkaListener(topics = PriceTickProducer.TOPIC, groupId = "ohlcv-aggregator")
     public void consume(PriceUpdate tick) {
         ohlcvAggregationUseCase.onTick(tick);
