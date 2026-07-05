@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -60,7 +58,88 @@ services:
       timeout: 5s
       retries: 5
 
+  # ---------- Observability stack ----------
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: trading-core-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      # Bind mount: maps ./docker/prometheus/prometheus.yml on your Mac into the container
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    extra_hosts:
+      # Lets Prometheus resolve host.docker.internal → your Mac's IP (works on macOS automatically,
+      # needed for Linux where Docker does not inject this hostname by default)
+      - "host.docker.internal:host-gateway"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=7d'   # Keep 7 days of metrics locally
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  loki:
+    image: grafana/loki:3.3.2
+    container_name: trading-core-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./docker/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:3100/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  tempo:
+    image: grafana/tempo:2.6.1
+    container_name: trading-core-tempo
+    ports:
+      - "3200:3200"   # HTTP API (Grafana reads traces here)
+      - "4318:4318"   # OTLP/HTTP (your Spring Boot app pushes traces here)
+      - "4317:4317"   # OTLP/gRPC (alternative, kept for reference)
+    volumes:
+      - ./docker/tempo/tempo.yml:/etc/tempo/tempo.yml:ro
+      - tempo_data:/var/tempo
+    command: -config.file=/etc/tempo/tempo.yml
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:3200/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    container_name: trading-core-grafana
+    ports:
+      - "3001:3000"   # Using 3001 on host to avoid conflict with React dev server on 3000
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      # Provisioning: Grafana loads datasources from this directory on startup
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres_data:
   kafka_data:
   mongodb_data:
+  loki_data:
+  tempo_data:
+  grafana_data:
