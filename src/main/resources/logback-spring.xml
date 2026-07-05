@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!--
+        Read Spring properties into Logback variables.
+        <springProperty> only works in logback-spring.xml (not logback.xml).
+    -->
+    <springProperty scope="context" name="appName" source="spring.application.name"/>
+    <springProperty scope="context" name="lokiUrl" source="loki.url" defaultValue="http://localhost:3100"/>
+
+    <!-- Console appender: same pattern as before, now includes traceId from MDC -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!--
+                %X{traceId} reads from MDC — Micrometer tracing injects the current
+                trace ID here automatically for every instrumented request.
+            -->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} [trace=%X{traceId}] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!--
+        Loki4j appender: batches log lines and POSTs them to Loki's push API.
+        Non-blocking by default — does not slow down your application.
+    -->
+    <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
+        <http>
+            <url>${lokiUrl}/loki/api/v1/push</url>
+        </http>
+        <format>
+            <!--
+                Labels are indexed by Loki and used for filtering in LogQL queries.
+                Keep cardinality low — never use userId or requestId as a label.
+                level, app, and host are the standard set.
+            -->
+            <label>
+                <pattern>app=${appName},host=${HOSTNAME},level=%level</pattern>
+            </label>
+            <!--
+                The actual log line stored by Loki (not indexed, full-text only).
+                Include traceId here so Grafana can correlate logs ↔ traces.
+            -->
+            <message>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} [trace=%X{traceId}] - %msg%n</pattern>
+            </message>
+            <sortByTime>true</sortByTime>
+        </format>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="LOKI"/>
+    </root>
+
+    <logger name="com.msj" level="INFO"/>
+    <logger name="com.msj.marketdata.infrastructure.adapters.binance" level="WARN"/>
+    <logger name="org.springframework.security" level="INFO"/>
+    <logger name="org.springframework.web" level="INFO"/>
+
+</configuration>

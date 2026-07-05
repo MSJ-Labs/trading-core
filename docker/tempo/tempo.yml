@@ -1,0 +1,28 @@
+server:
+  http_listen_port: 3200   # Grafana queries Tempo on this port
+
+# Distributor receives trace spans from your app
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        http:
+          endpoint: 0.0.0.0:4318   # Spring Boot pushes OTLP/HTTP here
+        grpc:
+          endpoint: 0.0.0.0:4317   # gRPC alternative (not used locally, kept for reference)
+
+ingester:
+  max_block_duration: 5m   # Flush to storage every 5 minutes
+
+compactor:
+  compaction:
+    block_retention: 48h   # Keep traces for 48 hours locally
+
+# Storage: local filesystem (swap for S3/GCS in production)
+storage:
+  trace:
+    backend: local
+    wal:
+      path: /var/tempo/wal     # Write-ahead log: survives restarts
+    local:
+      path: /var/tempo/blocks  # Flushed trace blocks

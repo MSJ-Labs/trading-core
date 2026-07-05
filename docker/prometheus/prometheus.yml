@@ -1,0 +1,16 @@
+global:
+  scrape_interval: 15s      # Pull metrics from every target every 15 seconds
+  evaluation_interval: 15s  # Evaluate alerting rules every 15 seconds
+
+scrape_configs:
+  - job_name: 'iris'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      # host.docker.internal resolves to your Mac's IP from inside Docker containers
+      # This lets Prometheus (in Docker) reach Spring Boot (running on host)
+      - targets: ['host.docker.internal:8080']
+
+  - job_name: 'prometheus'
+    static_configs:
+      # Self-scrape: Prometheus runs in this same container, so localhost is correct here
+      - targets: ['localhost:9090']
