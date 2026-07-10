@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -31,25 +32,25 @@ public class JwtTokenProvider {
     private long refreshTokenExpirationMs;
 
     public String generateAccessToken(String username, Set<String> roles) {
-        Date now = new Date();
+        Instant now = Instant.now();
         return Jwts.builder()
                 .subject(username)
                 .claim("type", "access")
                 .claim(CLAIM_ROLES, roles)
-                .issuedAt(now)
-                .expiration(new Date(now.getTime() + accessTokenExpirationMs))
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(now.plusMillis(accessTokenExpirationMs)))
                 .signWith(signingKey(), Jwts.SIG.HS512)
                 .compact();
     }
 
     public String generateRefreshToken(String username, Set<String> roles) {
-        Date now = new Date();
+        Instant now = Instant.now();
         return Jwts.builder()
                 .subject(username)
                 .claim("type", "refresh")
                 .claim(CLAIM_ROLES, roles)
-                .issuedAt(now)
-                .expiration(new Date(now.getTime() + refreshTokenExpirationMs))
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(now.plusMillis(refreshTokenExpirationMs)))
                 .signWith(signingKey(), Jwts.SIG.HS512)
                 .compact();
     }

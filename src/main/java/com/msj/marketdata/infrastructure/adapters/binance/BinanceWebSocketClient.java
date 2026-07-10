@@ -16,6 +16,7 @@ import java.net.http.WebSocket;
 import java.time.Instant;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -30,7 +31,7 @@ public class BinanceWebSocketClient {
     private final HttpClient httpClient = HttpClient.newBuilder()
             .executor(Executors.newVirtualThreadPerTaskExecutor())
             .build();
-    private volatile WebSocket webSocket;
+    private final AtomicReference<WebSocket> webSocketRef = new AtomicReference<>();
 
     /**
      * Opens a combined stream on Binance: one WebSocket connection, multiple symbols.
@@ -49,7 +50,7 @@ public class BinanceWebSocketClient {
         httpClient.newWebSocketBuilder()
                 .buildAsync(URI.create(url), new BinanceListener())
                 .thenAccept(ws -> {
-                    this.webSocket = ws;
+                    webSocketRef.set(ws);
                     log.info("Binance WebSocket connected");
                 })
                 .exceptionally(ex -> {
@@ -60,7 +61,7 @@ public class BinanceWebSocketClient {
 
     @PreDestroy
     public void disconnect() {
-        WebSocket ws = this.webSocket;
+        WebSocket ws = webSocketRef.get();
         if (ws != null && !ws.isOutputClosed()) {
             ws.sendClose(WebSocket.NORMAL_CLOSURE, "shutdown");
         }
