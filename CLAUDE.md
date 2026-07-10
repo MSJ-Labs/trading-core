@@ -127,6 +127,7 @@ jwt.access-token-expiration-ms   # 900000 (15 min)
 jwt.refresh-token-expiration-ms  # 604800000 (7 days)
 app.security.cookie.secure       # false dev, true prod (COOKIE_SECURE env var)
 app.security.cookie.domain       # empty dev, set in prod (COOKIE_DOMAIN env var)
+spring.datasource.hikari.maximum-pool-size  # 5 dev (HIKARI_MAX_POOL_SIZE env var; size to (db_core_count*2)+1 in prod)
 ```
 
 ## Microservice extraction guide
