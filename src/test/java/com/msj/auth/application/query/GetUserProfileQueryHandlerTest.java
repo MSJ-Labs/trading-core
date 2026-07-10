@@ -37,8 +37,9 @@ class GetUserProfileQueryHandlerTest {
     @Test
     void handle_userNotFound_throwsUserNotFoundException() {
         when(userRepository.findByUsername("unknown")).thenReturn(Optional.empty());
+        GetUserProfileQuery query = new GetUserProfileQuery("unknown");
 
-        assertThatThrownBy(() -> handler.handle(new GetUserProfileQuery("unknown")))
+        assertThatThrownBy(() -> handler.handle(query))
                 .isInstanceOf(UserNotFoundException.class);
     }
 }

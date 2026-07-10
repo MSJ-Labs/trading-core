@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 public class UserPrincipal implements UserDetails {
 
     @Getter @Nullable
-    private final User user;
+    private final transient User user;
     private final String username;
     private final Set<GrantedAuthority> authorities;
 

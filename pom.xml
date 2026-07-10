@@ -14,6 +14,25 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring-boot.version>3.5.12</spring-boot.version>
         <jooq.version>3.19.15</jooq.version>
+
+        <!-- Mirrors the jacoco-check PACKAGE excludes below: packages deemed
+             impractical/low-value to unit-test (real DB/WebSocket I/O, Spring
+             config, generated JOOQ schema) so SonarCloud's new-code coverage
+             gate doesn't flag them on unrelated touches. -->
+        <sonar.coverage.exclusions>
+            src/main/java/com/msj/*.java,
+            src/main/java/com/msj/marketdata/*.java,
+            **/auth/api/**,
+            **/controller/**,
+            **/auth/infrastructure/adapters/persistence/**,
+            **/infrastructure/jooq/**,
+            **/config/**,
+            **/auth/domain/token/**,
+            **/marketdata/api/**,
+            **/marketdata/infrastructure/adapters/coingecko/**,
+            **/marketdata/infrastructure/adapters/binance/**,
+            **/marketdata/infrastructure/adapters/persistence/mongo/**
+        </sonar.coverage.exclusions>
     </properties>
 
     <dependencyManagement>

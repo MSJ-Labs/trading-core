@@ -57,8 +57,9 @@ class GetCoinPriceQueryHandlerTest {
     void handle_throws_CoinNotFoundException_when_provider_returns_empty() {
         when(priceCache.getCoinPrice("unknown-coin")).thenReturn(Optional.empty());
         when(marketDataProvider.fetchCoinPrice("unknown-coin")).thenReturn(Optional.empty());
+        GetCoinPriceQuery query = new GetCoinPriceQuery("unknown-coin");
 
-        assertThatThrownBy(() -> handler.handle(new GetCoinPriceQuery("unknown-coin")))
+        assertThatThrownBy(() -> handler.handle(query))
                 .isInstanceOf(CoinNotFoundException.class)
                 .hasMessageContaining("unknown-coin");
     }
@@ -67,8 +68,9 @@ class GetCoinPriceQueryHandlerTest {
     void handle_does_not_cache_when_provider_throws() {
         when(priceCache.getCoinPrice("bitcoin")).thenReturn(Optional.empty());
         when(marketDataProvider.fetchCoinPrice("bitcoin")).thenThrow(new RuntimeException("timeout"));
+        GetCoinPriceQuery query = new GetCoinPriceQuery("bitcoin");
 
-        assertThatThrownBy(() -> handler.handle(new GetCoinPriceQuery("bitcoin")))
+        assertThatThrownBy(() -> handler.handle(query))
                 .isInstanceOf(RuntimeException.class);
         verify(priceCache, never()).putCoinPrice(any());
     }

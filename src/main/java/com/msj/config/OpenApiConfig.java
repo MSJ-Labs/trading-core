@@ -11,6 +11,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenApiConfig {
 
+    private static final String BEARER_AUTH = "BearerAuth";
+
     @Bean
     public OpenAPI openAPI() {
         return new OpenAPI()
@@ -18,10 +20,10 @@ public class OpenApiConfig {
                         .title("Iris Trading API")
                         .version("1.0")
                         .description("Personal crypto trading platform — market data, alerts, paper trading"))
-                .addSecurityItem(new SecurityRequirement().addList("BearerAuth"))
+                .addSecurityItem(new SecurityRequirement().addList(BEARER_AUTH))
                 .components(new Components()
-                        .addSecuritySchemes("BearerAuth", new SecurityScheme()
-                                .name("BearerAuth")
+                        .addSecuritySchemes(BEARER_AUTH, new SecurityScheme()
+                                .name(BEARER_AUTH)
                                 .type(SecurityScheme.Type.HTTP)
                                 .scheme("bearer")
                                 .bearerFormat("JWT")));

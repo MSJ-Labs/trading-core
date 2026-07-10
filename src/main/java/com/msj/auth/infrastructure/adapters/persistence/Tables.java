@@ -1,11 +1,13 @@
 package com.msj.auth.infrastructure.adapters.persistence;
 
+import lombok.experimental.UtilityClass;
 import org.jooq.Field;
 import org.jooq.impl.DSL;
 import org.jooq.impl.TableImpl;
 
 import java.time.LocalDateTime;
 
+@UtilityClass
 public class Tables {
 
     public static final Users USERS = new Users();
