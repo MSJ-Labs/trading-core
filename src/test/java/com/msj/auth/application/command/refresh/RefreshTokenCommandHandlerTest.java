@@ -43,8 +43,9 @@ class RefreshTokenCommandHandlerTest {
     @Test
     void handle_invalidJwt_throwsBadCredentials() {
         when(jwtTokenProvider.validateToken("bad-token")).thenReturn(false);
+        RefreshTokenCommand command = new RefreshTokenCommand("bad-token");
 
-        assertThatThrownBy(() -> handler.handle(new RefreshTokenCommand("bad-token")))
+        assertThatThrownBy(() -> handler.handle(command))
                 .isInstanceOf(BadCredentialsException.class)
                 .hasMessageContaining("refresh token");
     }
@@ -53,8 +54,9 @@ class RefreshTokenCommandHandlerTest {
     void handle_revokedToken_throwsBadCredentials() {
         when(jwtTokenProvider.validateToken("revoked-token")).thenReturn(true);
         when(refreshTokenRepository.isValid(anyString())).thenReturn(false);
+        RefreshTokenCommand command = new RefreshTokenCommand("revoked-token");
 
-        assertThatThrownBy(() -> handler.handle(new RefreshTokenCommand("revoked-token")))
+        assertThatThrownBy(() -> handler.handle(command))
                 .isInstanceOf(BadCredentialsException.class)
                 .hasMessageContaining("refresh token");
     }

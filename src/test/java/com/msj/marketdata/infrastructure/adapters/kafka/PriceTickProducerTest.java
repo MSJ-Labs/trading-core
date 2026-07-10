@@ -33,10 +33,10 @@ class PriceTickProducerTest {
     @Test
     void publish_sendsToCorrectTopicWithSymbolAsKey() {
         PriceUpdate tick = new PriceUpdate("BTCUSDT", new BigDecimal("65000.00"), Instant.now());
-        ProducerRecord<String, PriceUpdate> record = new ProducerRecord<>(TOPIC, "BTCUSDT", tick);
+        ProducerRecord<String, PriceUpdate> producerRecord = new ProducerRecord<>(TOPIC, "BTCUSDT", tick);
         RecordMetadata metadata = new RecordMetadata(new TopicPartition(TOPIC, 0), 0, 0, 0, 0, 0);
         when(kafkaTemplate.send(TOPIC, "BTCUSDT", tick))
-                .thenReturn(CompletableFuture.completedFuture(new SendResult<>(record, metadata)));
+                .thenReturn(CompletableFuture.completedFuture(new SendResult<>(producerRecord, metadata)));
 
         producer.publish(tick);
 

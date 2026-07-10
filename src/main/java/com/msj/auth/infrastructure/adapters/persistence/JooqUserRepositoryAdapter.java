@@ -78,34 +78,34 @@ public class JooqUserRepositoryAdapter implements UserRepository {
     @Override
     @Transactional(readOnly = true)
     public Optional<User> findByUsername(String username) {
-        Record record = dsl.select()
+        Record row = dsl.select()
                 .from(USERS)
                 .where(USERS.USERNAME.eq(username))
                 .fetchOne();
 
-        return Optional.ofNullable(record).map(r -> mapWithRoles(r, UserId.of(r.get(USERS.ID))));
+        return Optional.ofNullable(row).map(r -> mapWithRoles(r, UserId.of(r.get(USERS.ID))));
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<User> findByEmail(String email) {
-        Record record = dsl.select()
+        Record row = dsl.select()
                 .from(USERS)
                 .where(USERS.EMAIL.eq(email))
                 .fetchOne();
 
-        return Optional.ofNullable(record).map(r -> mapWithRoles(r, UserId.of(r.get(USERS.ID))));
+        return Optional.ofNullable(row).map(r -> mapWithRoles(r, UserId.of(r.get(USERS.ID))));
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<User> findById(UserId id) {
-        Record record = dsl.select()
+        Record row = dsl.select()
                 .from(USERS)
                 .where(USERS.ID.eq(id.value().toLong()))
                 .fetchOne();
 
-        return Optional.ofNullable(record).map(r -> mapWithRoles(r, id));
+        return Optional.ofNullable(row).map(r -> mapWithRoles(r, id));
     }
 
     @Override
@@ -121,7 +121,7 @@ public class JooqUserRepositoryAdapter implements UserRepository {
     }
 
     // Single query — user + roles joined, no N+1
-    private User mapWithRoles(Record record, UserId userId) {
+    private User mapWithRoles(Record row, UserId userId) {
         Set<String> roles = dsl.select(ROLES.NAME)
                 .from(USER_ROLES)
                 .join(ROLES).on(ROLES.ID.eq(USER_ROLES.ROLE_ID))
@@ -130,21 +130,21 @@ public class JooqUserRepositoryAdapter implements UserRepository {
 
         return User.builder()
                 .id(userId)
-                .username(record.get(USERS.USERNAME))
-                .email(record.get(USERS.EMAIL))
-                .passwordHash(record.get(USERS.PASSWORD))
-                .firstName(record.get(USERS.FIRST_NAME))
-                .lastName(record.get(USERS.LAST_NAME))
-                .enabled(record.get(USERS.ENABLED))
-                .accountNonExpired(record.get(USERS.ACCOUNT_NON_EXPIRED))
-                .accountNonLocked(record.get(USERS.ACCOUNT_NON_LOCKED))
-                .credentialsNonExpired(record.get(USERS.CREDENTIALS_NON_EXPIRED))
-                .createdAt(record.get(USERS.CREATED_AT, LocalDateTime.class))
-                .updatedAt(record.get(USERS.UPDATED_AT, LocalDateTime.class))
-                .lastLoginAt(record.get(USERS.LAST_LOGIN_AT, LocalDateTime.class))
-                .failedLoginAttempts(record.get(USERS.FAILED_LOGIN_ATTEMPTS) != null
-                        ? record.get(USERS.FAILED_LOGIN_ATTEMPTS) : 0)
-                .lockedUntil(record.get(USERS.LOCKED_UNTIL, LocalDateTime.class))
+                .username(row.get(USERS.USERNAME))
+                .email(row.get(USERS.EMAIL))
+                .passwordHash(row.get(USERS.PASSWORD))
+                .firstName(row.get(USERS.FIRST_NAME))
+                .lastName(row.get(USERS.LAST_NAME))
+                .enabled(row.get(USERS.ENABLED))
+                .accountNonExpired(row.get(USERS.ACCOUNT_NON_EXPIRED))
+                .accountNonLocked(row.get(USERS.ACCOUNT_NON_LOCKED))
+                .credentialsNonExpired(row.get(USERS.CREDENTIALS_NON_EXPIRED))
+                .createdAt(row.get(USERS.CREATED_AT, LocalDateTime.class))
+                .updatedAt(row.get(USERS.UPDATED_AT, LocalDateTime.class))
+                .lastLoginAt(row.get(USERS.LAST_LOGIN_AT, LocalDateTime.class))
+                .failedLoginAttempts(row.get(USERS.FAILED_LOGIN_ATTEMPTS) != null
+                        ? row.get(USERS.FAILED_LOGIN_ATTEMPTS) : 0)
+                .lockedUntil(row.get(USERS.LOCKED_UNTIL, LocalDateTime.class))
                 .roles(roles)
                 .build();
     }

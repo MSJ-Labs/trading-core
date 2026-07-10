@@ -19,6 +19,8 @@ import java.util.Set;
 @Component
 public class JwtTokenProvider {
 
+    private static final String CLAIM_ROLES = "roles";
+
     @Value("${jwt.secret}")
     private String jwtSecret;
 
@@ -33,7 +35,7 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .subject(username)
                 .claim("type", "access")
-                .claim("roles", roles)
+                .claim(CLAIM_ROLES, roles)
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + accessTokenExpirationMs))
                 .signWith(signingKey(), Jwts.SIG.HS512)
@@ -45,7 +47,7 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .subject(username)
                 .claim("type", "refresh")
-                .claim("roles", roles)
+                .claim(CLAIM_ROLES, roles)
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + refreshTokenExpirationMs))
                 .signWith(signingKey(), Jwts.SIG.HS512)
@@ -58,7 +60,7 @@ public class JwtTokenProvider {
 
     @SuppressWarnings("unchecked")
     public Set<String> getRolesFromToken(String token) {
-        List<String> roles = (List<String>) parseClaims(token).get("roles");
+        List<String> roles = (List<String>) parseClaims(token).get(CLAIM_ROLES);
         return roles != null ? Set.copyOf(roles) : Set.of();
     }
 

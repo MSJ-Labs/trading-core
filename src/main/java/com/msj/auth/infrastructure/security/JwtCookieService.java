@@ -3,6 +3,7 @@ package com.msj.auth.infrastructure.security;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
@@ -31,17 +32,17 @@ public class JwtCookieService {
     private long refreshTokenExpirationMs;
 
     public void addAuthCookies(HttpServletResponse response, String accessToken, String refreshToken) {
-        response.addHeader("Set-Cookie", buildCookie(ACCESS_COOKIE, accessToken, accessTokenExpirationMs / 1000).toString());
-        response.addHeader("Set-Cookie", buildCookie(REFRESH_COOKIE, refreshToken, refreshTokenExpirationMs / 1000).toString());
+        response.addHeader(HttpHeaders.SET_COOKIE,buildCookie(ACCESS_COOKIE, accessToken, accessTokenExpirationMs / 1000).toString());
+        response.addHeader(HttpHeaders.SET_COOKIE,buildCookie(REFRESH_COOKIE, refreshToken, refreshTokenExpirationMs / 1000).toString());
     }
 
     public void refreshAccessTokenCookie(HttpServletResponse response, String accessToken) {
-        response.addHeader("Set-Cookie", buildCookie(ACCESS_COOKIE, accessToken, accessTokenExpirationMs / 1000).toString());
+        response.addHeader(HttpHeaders.SET_COOKIE,buildCookie(ACCESS_COOKIE, accessToken, accessTokenExpirationMs / 1000).toString());
     }
 
     public void clearAuthCookies(HttpServletResponse response) {
-        response.addHeader("Set-Cookie", buildCookie(ACCESS_COOKIE, "", 0).toString());
-        response.addHeader("Set-Cookie", buildCookie(REFRESH_COOKIE, "", 0).toString());
+        response.addHeader(HttpHeaders.SET_COOKIE,buildCookie(ACCESS_COOKIE, "", 0).toString());
+        response.addHeader(HttpHeaders.SET_COOKIE,buildCookie(REFRESH_COOKIE, "", 0).toString());
     }
 
     public String extractAccessToken(jakarta.servlet.http.HttpServletRequest request) {

@@ -59,7 +59,8 @@ class LoginCommandHandlerTest {
     void login_throwsWhenUserNotFound() {
         when(userRepository.findByUsername("unknown")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> handler.handle(new LoginCommand("unknown", "pass")))
+        LoginCommand command = new LoginCommand("unknown", "pass");
+        assertThatThrownBy(() -> handler.handle(command))
                 .isInstanceOf(UserNotFoundException.class);
     }
 
@@ -69,7 +70,8 @@ class LoginCommandHandlerTest {
         when(passwordEncoder.matches("wrong", "$hashed$")).thenReturn(false);
         when(userRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        assertThatThrownBy(() -> handler.handle(new LoginCommand("jdoe", "wrong")))
+        LoginCommand command = new LoginCommand("jdoe", "wrong");
+        assertThatThrownBy(() -> handler.handle(command))
                 .isInstanceOf(BadCredentialsException.class);
 
         assertThat(activeUser.getFailedLoginAttempts()).isEqualTo(1);
@@ -81,8 +83,9 @@ class LoginCommandHandlerTest {
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
         when(userRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
+        LoginCommand command = new LoginCommand("jdoe", "wrong");
         for (int i = 0; i < 5; i++) {
-            assertThatThrownBy(() -> handler.handle(new LoginCommand("jdoe", "wrong")))
+            assertThatThrownBy(() -> handler.handle(command))
                     .isInstanceOf(BadCredentialsException.class);
         }
 
@@ -94,7 +97,8 @@ class LoginCommandHandlerTest {
     void login_throwsWhenAccountLocked() {
         when(userRepository.findByUsername("locked")).thenReturn(Optional.of(lockedUser()));
 
-        assertThatThrownBy(() -> handler.handle(new LoginCommand("locked", "pass")))
+        LoginCommand command = new LoginCommand("locked", "pass");
+        assertThatThrownBy(() -> handler.handle(command))
                 .isInstanceOf(LockedException.class);
     }
 }
