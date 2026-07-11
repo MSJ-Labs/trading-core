@@ -59,6 +59,26 @@ services:
       kafka:
         condition: service_healthy
 
+  redis:
+    image: redis:7.4-alpine
+    container_name: trading-core-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: trading-core-redisinsight
+    ports:
+      - "5540:5540"
+    depends_on:
+      redis:
+        condition: service_healthy
+
   mongodb:
     image: mongo:7.0
     container_name: trading-core-mongodb

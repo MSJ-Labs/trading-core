@@ -31,7 +31,8 @@
             **/marketdata/api/**,
             **/marketdata/infrastructure/adapters/coingecko/**,
             **/marketdata/infrastructure/adapters/binance/**,
-            **/marketdata/infrastructure/adapters/persistence/mongo/**
+            **/marketdata/infrastructure/adapters/persistence/mongo/**,
+            **/marketdata/infrastructure/adapters/cache/redis/**
         </sonar.coverage.exclusions>
     </properties>
 
@@ -184,7 +185,8 @@
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
 
-        <!-- Caffeine in-memory cache (market price cache, 60s TTL) -->
+        <!-- Caffeine in-memory cache (market price cache, 60s TTL) — kept as a switchable
+             alternate adapter behind marketdata.cache.provider=caffeine; Redis is the default -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-cache</artifactId>
@@ -192,6 +194,12 @@
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
             <artifactId>caffeine</artifactId>
+        </dependency>
+
+        <!-- Redis (market price cache, default adapter — shared across replicas, unlike Caffeine) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
 
         <!-- TSID for unique identifiers -->
@@ -350,6 +358,8 @@
                                         <exclude>com.msj.marketdata.infrastructure.adapters.binance</exclude>
                                         <!-- Spring Data MongoDB repository interfaces (no testable logic) -->
                                         <exclude>com.msj.marketdata.infrastructure.adapters.persistence.mongo</exclude>
+                                        <!-- Redis price cache adapter — requires a real Redis instance -->
+                                        <exclude>com.msj.marketdata.infrastructure.adapters.cache.redis</exclude>
                                     </excludes>
                                     <limits>
                                         <limit>
