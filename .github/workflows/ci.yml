@@ -52,4 +52,4 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build deployable image
-        run: docker build --target build -t trading-core .
+        run: docker build --target runtime -t trading-core .
