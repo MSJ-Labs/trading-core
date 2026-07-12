@@ -79,6 +79,7 @@ docker-compose.override.yml
 *.kubeconfig
 kubeconfig
 helm/charts/
+k8s/secret.yaml
 
 # ============================================================
 # Misc / system

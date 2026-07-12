@@ -21,17 +21,22 @@ services:
     container_name: trading-core-kafka
     ports:
       - "9092:9092"
+      - "29093:29093"
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
       # PLAINTEXT: host access (your Spring Boot app runs outside Docker, uses localhost:9092)
       # PLAINTEXT_INTERNAL: for containers on the compose network (e.g. kafka-ui), which would
       # otherwise get told to reconnect to "localhost" and hit themselves instead of the broker
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:29092,CONTROLLER://kafka:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      # EXTERNAL: for containers outside the compose network but still on the host (e.g. a
+      # minikube pod) — reachable via host.minikube.internal, distinct from PLAINTEXT_INTERNAL's
+      # "kafka" hostname (not resolvable from minikube) and PLAINTEXT's "localhost" (resolves to
+      # the pod itself, not the host, from inside a pod's own network namespace)
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:29093,CONTROLLER://kafka:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092,EXTERNAL://host.minikube.internal:29093
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
