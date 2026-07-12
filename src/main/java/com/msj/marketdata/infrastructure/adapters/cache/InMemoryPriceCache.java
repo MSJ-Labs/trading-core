@@ -4,13 +4,19 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.msj.marketdata.domain.CoinPrice;
 import com.msj.marketdata.infrastructure.ports.PriceCache;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Single-instance alternative to {@link com.msj.marketdata.infrastructure.adapters.cache.redis.RedisPriceCache}
+ * (the default). Active only when {@code marketdata.cache.provider=caffeine}.
+ */
 @Component
+@ConditionalOnProperty(name = "marketdata.cache.provider", havingValue = "caffeine")
 public class InMemoryPriceCache implements PriceCache {
 
     private static final String TOP_COINS_KEY = "topCoins";
