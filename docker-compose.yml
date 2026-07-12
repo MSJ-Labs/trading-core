@@ -62,8 +62,14 @@ services:
   redis:
     image: redis:7.4-alpine
     container_name: trading-core-redis
+    # RDB snapshotting only (no AOF) — this cache is fully recomputable from CoinGecko/Binance,
+    # so a periodic snapshot just avoids starting stone-cold after a container recreate; the
+    # fsync-per-write cost of AOF buys nothing for 60s-TTL data that isn't a system of record.
+    command: redis-server --save 60 1
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -175,6 +181,7 @@ services:
 volumes:
   postgres_data:
   kafka_data:
+  redis_data:
   mongodb_data:
   loki_data:
   tempo_data:
