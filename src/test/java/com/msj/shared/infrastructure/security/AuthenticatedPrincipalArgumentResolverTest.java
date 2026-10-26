@@ -63,14 +63,17 @@ class AuthenticatedPrincipalArgumentResolverTest {
     @Test
     void resolveArgument_refusesAnonymousWhenPrincipalIsRequired() throws Exception {
         authenticateAsAnonymous();
+        MethodParameter required = parameter("required");
 
-        assertThatThrownBy(() -> resolver.resolveArgument(parameter("required"), null, null, null))
+        assertThatThrownBy(() -> resolver.resolveArgument(required, null, null, null))
                 .isInstanceOf(AuthenticationCredentialsNotFoundException.class);
     }
 
     @Test
     void resolveArgument_refusesWhenThereIsNoAuthenticationAtAll() throws Exception {
-        assertThatThrownBy(() -> resolver.resolveArgument(parameter("required"), null, null, null))
+        MethodParameter required = parameter("required");
+
+        assertThatThrownBy(() -> resolver.resolveArgument(required, null, null, null))
                 .isInstanceOf(AuthenticationCredentialsNotFoundException.class);
     }
 
@@ -116,9 +119,9 @@ class AuthenticatedPrincipalArgumentResolverTest {
 
     @SuppressWarnings("unused")
     private static class Controller {
-        void required(AuthenticatedPrincipal principal) { }
-        void optional(Optional<AuthenticatedPrincipal> principal) { }
-        void nullable(@Nullable AuthenticatedPrincipal principal) { }
-        void unrelated(String value) { }
+        void required(AuthenticatedPrincipal principal) { /* signature only, read by reflection */ }
+        void optional(Optional<AuthenticatedPrincipal> principal) { /* signature only, read by reflection */ }
+        void nullable(@Nullable AuthenticatedPrincipal principal) { /* signature only, read by reflection */ }
+        void unrelated(String value) { /* signature only, read by reflection */ }
     }
 }

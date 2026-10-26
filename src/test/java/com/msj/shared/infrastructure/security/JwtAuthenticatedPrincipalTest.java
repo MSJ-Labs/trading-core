@@ -43,13 +43,17 @@ class JwtAuthenticatedPrincipalTest {
 
     @Test
     void from_rejectsSubjectThatIsNotAUuid() {
-        assertThatThrownBy(() -> JwtAuthenticatedPrincipal.from(token("not-a-uuid")))
+        JwtAuthenticationToken auth = token("not-a-uuid");
+
+        assertThatThrownBy(() -> JwtAuthenticatedPrincipal.from(auth))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void from_rejectsMissingSubject() {
-        assertThatThrownBy(() -> JwtAuthenticatedPrincipal.from(token(null)))
+        JwtAuthenticationToken auth = token(null);
+
+        assertThatThrownBy(() -> JwtAuthenticatedPrincipal.from(auth))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
