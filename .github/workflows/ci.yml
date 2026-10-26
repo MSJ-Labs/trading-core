@@ -43,6 +43,7 @@ jobs:
           -Dsonar.projectKey=MSJ-Labs_trading-core
           -Dsonar.organization=msj-labs
           -Dsonar.host.url=https://sonarcloud.io
+          -Dsonar.verbose=true
 
   build:
     needs: sonar
