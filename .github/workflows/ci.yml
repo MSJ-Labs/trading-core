@@ -34,6 +34,15 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
+      - name: Debug Sonar API access (temporary)
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: >
+          curl -sS -i
+          -H "Authorization: Bearer $SONAR_TOKEN"
+          "https://api.sonarcloud.io/analysis/jres?os=linux&arch=x86_64"
+          | head -40 || true
+
       - name: Build, test, and analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
