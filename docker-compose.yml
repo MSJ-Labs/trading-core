@@ -105,6 +105,61 @@ services:
       timeout: 5s
       retries: 5
 
+  # ---------- Identity (Keycloak) ----------
+
+  # Dedicated database for Keycloak: the identity provider has its own lifecycle (upgrades, backups,
+  # restore) and must never share a schema or credentials with the application database.
+  keycloak-db:
+    image: postgres:16-alpine
+    container_name: trading-core-keycloak-db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set KEYCLOAK_DB_PASSWORD in .env}
+    volumes:
+      - keycloak_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4.0
+    container_name: trading-core-keycloak
+    # start-dev: HTTP allowed, relaxed hostname checks, no production caches. Prod uses "start" behind a TLS proxy.
+    # No realm import: the realm and everything in it is created by Terraform (infra/terraform/keycloak),
+    # so Keycloak keeps generating its own built-in scopes and roles.
+    command: start-dev
+    ports:
+      - "8180:8080"
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set KEYCLOAK_DB_PASSWORD in .env}
+      # Temporary bootstrap admin of the "master" realm (Keycloak 26 names). Change it right after the first login.
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set KEYCLOAK_ADMIN_PASSWORD in .env}
+      # The public URL, as seen by the browser. It becomes the "iss" claim of every token, and the
+      # resource server compares it character by character: it must be stable and identical everywhere.
+      KC_HOSTNAME: http://localhost:8180
+      KC_HEALTH_ENABLED: "true"
+      # Official bootstrap of a service account in the "master" realm (Keycloak 26.1+). Terraform logs in with it
+      # to create the realm. In prod: Terraform creates a narrower account, then this one is deleted.
+      KC_BOOTSTRAP_ADMIN_CLIENT_ID: terraform
+      KC_BOOTSTRAP_ADMIN_CLIENT_SECRET: ${TERRAFORM_CLIENT_SECRET:?set TERRAFORM_CLIENT_SECRET in .env}
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    healthcheck:
+      # The image ships neither curl nor wget: raw HTTP over bash /dev/tcp on the management port (9000).
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q '\"status\": \"UP\"' <&3"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
   # ---------- Observability stack ----------
 
   prometheus:
@@ -188,6 +243,7 @@ volumes:
   kafka_data:
   redis_data:
   mongodb_data:
+  keycloak_db_data:
   loki_data:
   tempo_data:
   grafana_data:

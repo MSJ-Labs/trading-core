@@ -104,6 +104,10 @@ All entity IDs use **TSID** (`io.hypersistence:hypersistence-tsid`):
 
 ## Security Model
 
+> **Migration in progress:** the home-made login below is being replaced by Keycloak 26 (BFF + resource server,
+> realm managed by Terraform). Target model and decisions: see "Identity (Keycloak migration)" in `CLAUDE.md`.
+> This section is rewritten once the Spring resource server exists.
+
 ```
 Browser
   │  POST /api/v1/auth/login  {username, password}

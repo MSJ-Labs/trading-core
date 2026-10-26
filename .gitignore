@@ -74,6 +74,18 @@ logs/
 docker-compose.override.yml
 
 # ============================================================
+# Terraform (state holds secrets in clear text: never commit it)
+# .terraform.lock.hcl IS committed (pins provider versions)
+# ============================================================
+.terraform/
+*.tfstate
+*.tfstate.*
+*.secret.tfvars
+*.secret.tfvars.json
+crash.log
+crash.*.log
+
+# ============================================================
 # Kubernetes / Helm
 # ============================================================
 *.kubeconfig

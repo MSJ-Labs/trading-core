@@ -7,8 +7,10 @@ import com.msj.marketdata.domain.CoinNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.LockedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -43,6 +45,16 @@ public class GlobalExceptionHandler {
         log.warn("Authentication failed: {}", ex.getMessage());
         // Never reveal whether username or password was wrong
         return error(HttpStatus.UNAUTHORIZED, "Invalid credentials", request);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<Object> handleAuthentication(WebRequest request) {
+        return error(HttpStatus.UNAUTHORIZED, "Authentication required", request);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Object> handleAccessDenied(WebRequest request) {
+        return error(HttpStatus.FORBIDDEN, "Access denied", request);
     }
 
     @ExceptionHandler(LockedException.class)
