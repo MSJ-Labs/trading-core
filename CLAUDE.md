@@ -132,6 +132,10 @@ Infrastructure as code (`infra/terraform/keycloak/`):
 - **Before prod (actuator)**: do not expose health/metrics on the public port. Serve actuator on a separate management port (`management.server.port`, e.g. 9090): Kubernetes probes hit the pod IP on that port, Prometheus scrapes it from inside the cluster, and the `Service`/`Ingress` only expose 8080. Then drop the `/actuator/**` `permitAll` lines from `SecurityConfig`.
 - Run: `set -a; source .env; set +a; export TF_VAR_terraform_client_secret="$TERRAFORM_CLIENT_SECRET"; cd infra/terraform/keycloak; terraform plan`
 
+## CI: temporary Sonar workaround (retest before every commit)
+
+`.github/workflows/ci.yml` passes `-Dsonar.scanner.skipJreProvisioning=true` because `api.sonarcloud.io/analysis/jres` returned 403 (AWS "explicit deny") for GitHub runner IPs on 2026-10-26 (token, permissions and project were fine; same call returns 200 from a home IP). **Before each new commit, remind the user to retest without this flag** and remove it (and its comment) once the job passes. Also pinned `sonar-maven-plugin:5.1.0.4751` (keep). If still failing, report to the SonarSource community with the `x-amzn-requestid`.
+
 ## Database migrations
 
 Flyway migrations in `src/main/resources/db/migration/`. Naming convention: **one file per month**, `V{n}__{YYYY}_{Month}.sql`.
