@@ -1,7 +1,7 @@
 package com.msj.marketdata.infrastructure.adapters.kafka;
 
 import com.msj.marketdata.domain.PriceUpdate;
-import com.msj.marketdata.infrastructure.ports.PriceTickPublisher;
+import com.msj.marketdata.application.port.out.PriceTickPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -19,7 +19,7 @@ public class PriceTickProducer implements PriceTickPublisher {
     @Override
     public void publish(PriceUpdate tick) {
         kafkaTemplate.send(TOPIC, tick.symbol(), tick)
-                .whenComplete((result, ex) -> {
+                .whenComplete((_, ex) -> {
                     if (ex != null) {
                         log.warn("Failed to publish tick for {}: {}", tick.symbol(), ex.getMessage());
                     }

@@ -93,7 +93,7 @@ Target model:
 - **BFF**: the Spring backend is a confidential OAuth2 client (`trading-bff`, Authorization Code + PKCE). Tokens never reach the browser, which only holds an httpOnly session cookie.
 - **Resource server**: validates signature (JWKS), issuer and audience (`aud`), maps `realm_access.roles` to `ROLE_*`.
 - **Identity**: Keycloak `sub` (UUID) is the user id everywhere, wrapped in a value object per BC; `AuthenticatedPrincipal` interface in `shared.infrastructure.security`, no Spring Security types in application/domain. Handlers get the caller through a `CurrentUserProvider` port (`application/port/out`), implemented by an adapter that translates the principal into the BC's own id type and refuses anonymous callers (see `identity/`).
-- **Architecture rules**: `ArchitectureTest` (ArchUnit) enforces the layering above. Temporary exception, to remove: `marketdata` still keeps its ports in `infrastructure/ports` (move them to `application/port/out`).
+- **Architecture rules**: `ArchitectureTest` (ArchUnit) enforces the layering above, with no exception: every BC keeps its ports in `application/port/out`.
 - Real users self-register in Keycloak; Terraform never creates them.
 
 Infrastructure as code (`infra/terraform/keycloak/`):

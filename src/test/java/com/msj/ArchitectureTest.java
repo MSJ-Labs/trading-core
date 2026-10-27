@@ -24,14 +24,12 @@ class ArchitectureTest {
                     "java..", "..domain..", "io.hypersistence.tsid..", "lombok..");
 
     // Spring is allowed here for composition only: no web, security or persistence types.
-    // Temporary: marketdata still keeps its ports in infrastructure.ports; move them to application.port.out.
     @ArchTest
     static final ArchRule applicationDependsOnDomainOnly = classes()
             .that().resideInAPackage("..application..")
             .should().onlyDependOnClassesThat().resideInAnyPackage(
                     "java..", "..domain..", "..application..", "lombok..", "org.slf4j..",
-                    "org.springframework.stereotype..", "org.springframework.transaction.annotation..",
-                    "com.msj.marketdata.infrastructure.ports..");
+                    "org.springframework.stereotype..", "org.springframework.transaction.annotation..");
 
     @ArchTest
     static final ArchRule nothingInsideDependsOnTheOutside = noClasses()
