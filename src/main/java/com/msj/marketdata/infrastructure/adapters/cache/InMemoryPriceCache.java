@@ -3,7 +3,7 @@ package com.msj.marketdata.infrastructure.adapters.cache;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.msj.marketdata.domain.CoinPrice;
-import com.msj.marketdata.infrastructure.ports.PriceCache;
+import com.msj.marketdata.application.port.out.PriceCache;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 

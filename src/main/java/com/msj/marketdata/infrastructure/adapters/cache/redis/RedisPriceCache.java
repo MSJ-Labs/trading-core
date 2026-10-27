@@ -1,7 +1,7 @@
 package com.msj.marketdata.infrastructure.adapters.cache.redis;
 
 import com.msj.marketdata.domain.CoinPrice;
-import com.msj.marketdata.infrastructure.ports.PriceCache;
+import com.msj.marketdata.application.port.out.PriceCache;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

@@ -1,7 +1,7 @@
 package com.msj.marketdata.infrastructure.adapters.persistence.mongo;
 
 import com.msj.marketdata.domain.PriceUpdate;
-import com.msj.marketdata.infrastructure.ports.PriceTickRepository;
+import com.msj.marketdata.application.port.out.PriceTickRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

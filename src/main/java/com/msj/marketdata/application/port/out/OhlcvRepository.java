@@ -1,4 +1,4 @@
-package com.msj.marketdata.infrastructure.ports;
+package com.msj.marketdata.application.port.out;
 
 import com.msj.marketdata.domain.OhlcvCandle;
 

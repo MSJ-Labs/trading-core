@@ -2,7 +2,7 @@ package com.msj.marketdata.application.command;
 
 import com.msj.marketdata.domain.OhlcvCandle;
 import com.msj.marketdata.domain.PriceUpdate;
-import com.msj.marketdata.infrastructure.ports.OhlcvRepository;
+import com.msj.marketdata.application.port.out.OhlcvRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;

@@ -1,7 +1,7 @@
 package com.msj.marketdata.infrastructure.adapters.persistence.mongo;
 
 import com.msj.marketdata.domain.OhlcvCandle;
-import com.msj.marketdata.infrastructure.ports.OhlcvRepository;
+import com.msj.marketdata.application.port.out.OhlcvRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

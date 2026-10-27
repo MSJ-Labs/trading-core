@@ -3,14 +3,15 @@ package com.msj.marketdata.application.command;
 import com.msj.marketdata.domain.CoinPrice;
 import com.msj.marketdata.domain.PriceUpdate;
 import com.msj.marketdata.domain.events.PriceUpdatedEvent;
-import com.msj.marketdata.infrastructure.ports.PriceBroadcaster;
-import com.msj.marketdata.infrastructure.ports.PriceCache;
-import com.msj.marketdata.infrastructure.ports.PriceTickPublisher;
+import com.msj.marketdata.application.port.out.PriceBroadcaster;
+import com.msj.marketdata.application.port.out.PriceCache;
+import com.msj.marketdata.application.port.out.PriceTickPublisher;
 import com.msj.shared.domain.DomainEvent;
 import com.msj.shared.domain.events.DomainEventPublisher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -32,6 +33,7 @@ class PriceTickCommandHandlerTest {
     @Mock private PriceBroadcaster priceBroadcaster;
     @Mock private PriceTickPublisher priceTickPublisher;
     @Mock private DomainEventPublisher domainEventPublisher;
+    @Captor private ArgumentCaptor<List<DomainEvent>> eventsCaptor;
 
     @InjectMocks
     private PriceTickCommandHandler handler;
@@ -90,7 +92,6 @@ class PriceTickCommandHandlerTest {
         verify(priceCache).putCoinPrice(coinCaptor.capture());
         assertThat(coinCaptor.getValue().priceUsd()).isEqualByComparingTo("60000");
 
-        ArgumentCaptor<List<DomainEvent>> eventsCaptor = ArgumentCaptor.forClass(List.class);
         verify(domainEventPublisher).publish(eventsCaptor.capture());
         assertThat(eventsCaptor.getValue())
                 .containsExactly(new PriceUpdatedEvent("bitcoin", "BTC", BigDecimal.valueOf(60_000), ts));

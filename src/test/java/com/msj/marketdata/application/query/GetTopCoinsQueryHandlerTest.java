@@ -1,8 +1,8 @@
 package com.msj.marketdata.application.query;
 
 import com.msj.marketdata.domain.CoinPrice;
-import com.msj.marketdata.infrastructure.ports.MarketDataProvider;
-import com.msj.marketdata.infrastructure.ports.PriceCache;
+import com.msj.marketdata.application.port.out.MarketDataProvider;
+import com.msj.marketdata.application.port.out.PriceCache;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

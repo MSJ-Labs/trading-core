@@ -1,7 +1,7 @@
 package com.msj.marketdata.infrastructure.adapters.coingecko;
 
 import com.msj.marketdata.domain.CoinPrice;
-import com.msj.marketdata.infrastructure.ports.MarketDataProvider;
+import com.msj.marketdata.application.port.out.MarketDataProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
