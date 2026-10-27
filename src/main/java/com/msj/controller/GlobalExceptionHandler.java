@@ -1,15 +1,10 @@
 package com.msj.controller;
 
-import com.msj.auth.domain.user.EmailAlreadyExistsException;
-import com.msj.auth.domain.user.UserNotFoundException;
-import com.msj.auth.domain.user.UsernameAlreadyExistsException;
 import com.msj.marketdata.domain.CoinNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -25,26 +20,9 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<Object> handleUserNotFound(UserNotFoundException ex, WebRequest request) {
-        return error(HttpStatus.NOT_FOUND, ex.getMessage(), request);
-    }
-
     @ExceptionHandler(CoinNotFoundException.class)
     public ResponseEntity<Object> handleCoinNotFound(CoinNotFoundException ex, WebRequest request) {
         return error(HttpStatus.NOT_FOUND, ex.getMessage(), request);
-    }
-
-    @ExceptionHandler({UsernameAlreadyExistsException.class, EmailAlreadyExistsException.class})
-    public ResponseEntity<Object> handleConflict(RuntimeException ex, WebRequest request) {
-        return error(HttpStatus.CONFLICT, ex.getMessage(), request);
-    }
-
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<Object> handleBadCredentials(BadCredentialsException ex, WebRequest request) {
-        log.warn("Authentication failed: {}", ex.getMessage());
-        // Never reveal whether username or password was wrong
-        return error(HttpStatus.UNAUTHORIZED, "Invalid credentials", request);
     }
 
     @ExceptionHandler(AuthenticationException.class)
@@ -55,11 +33,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Object> handleAccessDenied(WebRequest request) {
         return error(HttpStatus.FORBIDDEN, "Access denied", request);
-    }
-
-    @ExceptionHandler(LockedException.class)
-    public ResponseEntity<Object> handleLocked(LockedException ex, WebRequest request) {
-        return error(HttpStatus.LOCKED, ex.getMessage(), request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

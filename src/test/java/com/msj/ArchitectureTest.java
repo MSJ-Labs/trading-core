@@ -2,7 +2,6 @@ package com.msj;
 
 import com.msj.shared.domain.ValueObject;
 import com.tngtech.archunit.core.importer.ImportOption;
-import com.tngtech.archunit.core.importer.Location;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
@@ -15,18 +14,8 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
  * domain / application / infrastructure (plus api for its inbound web adapter). Ports are owned by the application
  * (application.port.out) and implemented by infrastructure adapters, so dependencies only point inwards.
  */
-@AnalyzeClasses(packages = "com.msj", importOptions = {
-        ImportOption.DoNotIncludeTests.class,
-        ArchitectureTest.ExcludeLegacyAuth.class})
+@AnalyzeClasses(packages = "com.msj", importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureTest {
-
-    /** Legacy home-made auth, deleted in step B4 of the Keycloak migration. Remove this option with it. */
-    static final class ExcludeLegacyAuth implements ImportOption {
-        @Override
-        public boolean includes(Location location) {
-            return !location.contains("/com/msj/auth/");
-        }
-    }
 
     @ArchTest
     static final ArchRule domainIsPureJava = classes()

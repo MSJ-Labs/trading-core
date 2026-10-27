@@ -1,17 +1,13 @@
 package com.msj.config;
 
-import com.msj.auth.infrastructure.security.JwtAuthenticationFilter;
 import com.msj.shared.infrastructure.security.AuthenticatedPrincipal;
 import com.msj.shared.infrastructure.security.CurrentAuthenticatedPrincipal;
 import com.msj.shared.infrastructure.security.KeycloakJwtAuthenticationConverter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -30,9 +26,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// The legacy JwtAuthenticationFilter is a @Component that @WebMvcTest would scan; it needs beans of the old auth BC.
-@WebMvcTest(controllers = SecurityConfigTest.ProbeController.class,
-        excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = JwtAuthenticationFilter.class))
+@WebMvcTest(controllers = SecurityConfigTest.ProbeController.class)
 @Import({SecurityConfig.class, KeycloakJwtAuthenticationConverter.class, CurrentAuthenticatedPrincipal.class,
         SecurityConfigTest.ProbeController.class})
 class SecurityConfigTest {
@@ -44,11 +38,6 @@ class SecurityConfigTest {
 
     @MockitoBean
     private JwtDecoder jwtDecoder;
-
-    // Legacy: SecurityConfig exposes an AuthenticationManager bean. Without a UserDetailsService it becomes its
-    // own parent and a rejected token ends in a StackOverflowError. Remove with the legacy auth (B4).
-    @MockitoBean
-    private UserDetailsService userDetailsService;
 
     @Test
     void publicRoute_isReachableWithoutToken() throws Exception {
