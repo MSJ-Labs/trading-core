@@ -10,4 +10,3 @@ data:
   REDIS_PORT: "6379"
   MANAGEMENT_OTLP_TRACING_ENDPOINT: http://host.minikube.internal:4318/v1/traces
   LOKI_URL: http://host.minikube.internal:3100
-  COOKIE_SECURE: "false"

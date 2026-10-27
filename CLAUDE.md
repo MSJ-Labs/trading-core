@@ -26,7 +26,7 @@ Personal crypto trading platform: real-time price monitoring, algorithm/rule eng
 
 ```
 com.msj/
-├── auth/          ← Layer 1 (DONE): JWT auth, user management
+├── identity/      ← Keycloak identity: current user (UUID `sub`) and roles
 ├── marketdata/    ← Layer 3: CoinGecko REST + Binance WebSocket price feeds
 ├── trading/       ← Layer 8: Alpaca paper orders, order management
 ├── portfolio/     ← Layer 6: positions, P&L
@@ -51,15 +51,15 @@ Each bounded context is internally structured as:
 ### CQRS pattern
 
 ```
-POST /api/v1/auth/login
-  → LoginCommandHandler → domain logic → PostgreSQL write → Kafka event (future)
+POST /api/v1/orders   (future)
+  → PlaceOrderCommandHandler → domain logic → PostgreSQL write → Kafka event
 
-GET /api/v1/users/me
-  → GetUserProfileQueryHandler → PostgreSQL read → DTO returned
+GET /api/v1/me
+  → GetCurrentIdentityQueryHandler → CurrentUserProvider port → DTO returned
 ```
 
-- **Command side**: Commands are Java records (`LoginCommand`, `RegisterCommand`). Handlers are `@Service` classes. Write to PostgreSQL. Return domain object or void.
-- **Query side**: Queries are Java records (`GetUserProfileQuery`). Handlers are `@Service` classes. Read from PostgreSQL (later MongoDB for read models). Return response DTOs directly.
+- **Command side**: Commands are Java records (`PlaceOrderCommand`). Handlers are `@Service` classes. Write to PostgreSQL. Return domain object or void.
+- **Query side**: Queries are Java records (`GetCoinQuery`). Handlers are `@Service` classes. Read from PostgreSQL (later MongoDB for read models). Return response DTOs directly.
 - **Naming**: `GetXxxQuery` / `GetXxxQueryHandler` for query side. Repository methods still use `findByXxx` (Spring convention).
 
 ### Data split
@@ -68,7 +68,7 @@ GET /api/v1/users/me
 |---|---|
 | Commands, orders, positions, users | Read models, price history, OHLCV candles |
 | Financial integrity, transactions | Denormalized query projections, dashboards |
-| Auth, roles, permissions | Market data time-series |
+| Business data keyed by Keycloak `sub` | Market data time-series |
 
 ### Technology stack
 
@@ -81,45 +81,19 @@ GET /api/v1/users/me
 | DB migrations | Flyway — DDL managed exclusively here |
 | IDs | TSID (hypersistence-tsid) — BIGINT in DB, wrapped in value object records |
 | Event bus | Kafka (Layer 5+) |
-| Security | Spring Security + JWT (httpOnly cookies) |
+| Security | Spring Security OAuth2 resource server + Keycloak 26 (JWT) |
 | Market data | CoinGecko REST + Binance WebSocket (Layer 3) |
 | Paper trading | Alpaca sandbox API (Layer 8) |
 
-## auth/ bounded context (Layer 1 — completed)
+## Identity (Keycloak 26)
 
-### JWT cookie strategy
-
-- **Access token**: 15 min, `httpOnly`, `SameSite=Strict`, `secure=false` dev / `true` prod
-- **Refresh token**: 7 days, `httpOnly`, `SameSite=Strict`
-- `JwtAuthenticationFilter` reads cookie first, falls back to `Authorization: Bearer` header (keeps Swagger/Postman working in dev)
-- CSRF: disabled — `SameSite=Strict` on httpOnly cookies makes CSRF impossible
-
-### Endpoints
-
-| Method | Path | Auth | Description |
-|---|---|---|---|
-| POST | `/api/v1/auth/register` | Public | Register new user |
-| POST | `/api/v1/auth/login` | Public | Login, sets cookies |
-| POST | `/api/v1/auth/logout` | Required | Clears cookies |
-| POST | `/api/v1/auth/refresh` | Cookie | Issues new access token |
-| GET | `/api/v1/users/me` | Required | Current user profile |
-
-### Account security
-
-- BCrypt strength 12
-- Account locks after 5 failed login attempts (30 min lockout, auto-unlocks)
-- `BadCredentialsException` always returns generic "Invalid credentials" (no username enumeration)
-- Default role on registration: `ROLE_USER` (seeded in V2 migration, id=2)
-
-## Identity (Keycloak migration, in progress)
-
-The auth/ BC above is being replaced by Keycloak 26. Step 3 of the migration removes the old login/JWT code and the `auth` schema.
+The home-made auth BC (JWT cookies, login/register, `auth` schema) is gone: Keycloak owns credentials and sessions. Endpoint today: `GET /api/v1/me` (Bearer token, returns `sub` and roles).
 
 Target model:
 - **BFF**: the Spring backend is a confidential OAuth2 client (`trading-bff`, Authorization Code + PKCE). Tokens never reach the browser, which only holds an httpOnly session cookie.
 - **Resource server**: validates signature (JWKS), issuer and audience (`aud`), maps `realm_access.roles` to `ROLE_*`.
 - **Identity**: Keycloak `sub` (UUID) is the user id everywhere, wrapped in a value object per BC; `AuthenticatedPrincipal` interface in `shared.infrastructure.security`, no Spring Security types in application/domain. Handlers get the caller through a `CurrentUserProvider` port (`application/port/out`), implemented by an adapter that translates the principal into the BC's own id type and refuses anonymous callers (see `identity/`).
-- **Architecture rules**: `ArchitectureTest` (ArchUnit) enforces the layering above. Temporary exceptions, to remove: legacy `auth/` is excluded (deleted in B4); `marketdata` still keeps its ports in `infrastructure/ports` (move them to `application/port/out`).
+- **Architecture rules**: `ArchitectureTest` (ArchUnit) enforces the layering above. Temporary exception, to remove: `marketdata` still keeps its ports in `infrastructure/ports` (move them to `application/port/out`).
 - Real users self-register in Keycloak; Terraform never creates them.
 
 Infrastructure as code (`infra/terraform/keycloak/`):
@@ -136,19 +110,16 @@ Infrastructure as code (`infra/terraform/keycloak/`):
 
 Flyway migrations in `src/main/resources/db/migration/`. Naming convention: **one file per month**, `V{n}__{YYYY}_{Month}.sql`.
 
-- `V1__2026_April.sql` — `auth` schema: `users`, `roles`, `user_roles` + seed data
-- `V2__2026_April.sql` — `auth.refresh_tokens` (server-side token revocation)
+No migration yet: the legacy `auth` migrations were deleted (pre-prod, no data to keep), the folder only holds `.gitkeep`. Flyway stays enabled and uses the default `public` schema. The first real table is `V1__2026_October.sql` (or the current month).
 
-When adding tables or columns within the same calendar month, increment V and keep the same month name (e.g. `V3__2026_April.sql`). Start a new month name when the calendar month changes (e.g. `V4__2026_May.sql`).
+When adding tables or columns within the same calendar month, increment V and keep the same month name (e.g. `V2__2026_October.sql`). Start a new month name when the calendar month changes (e.g. `V3__2026_November.sql`).
 
 ## Key configuration (application.properties)
 
 ```properties
-jwt.secret              # Set via JWT_SECRET env var in prod (min 512-bit for HS512)
-jwt.access-token-expiration-ms   # 900000 (15 min)
-jwt.refresh-token-expiration-ms  # 604800000 (7 days)
-app.security.cookie.secure       # false dev, true prod (COOKIE_SECURE env var)
-app.security.cookie.domain       # empty dev, set in prod (COOKIE_DOMAIN env var)
+app.security.oauth2.issuer-uri   # KEYCLOAK_ISSUER_URI, default http://localhost:8180/realms/trading
+app.security.oauth2.audience     # KEYCLOAK_AUDIENCE, default trading-core
+app.security.oauth2.jwks-path    # KEYCLOAK_JWKS_PATH, default /protocol/openid-connect/certs
 spring.datasource.hikari.maximum-pool-size  # 5 dev (HIKARI_MAX_POOL_SIZE env var; size to (db_core_count*2)+1 in prod)
 ```
 
