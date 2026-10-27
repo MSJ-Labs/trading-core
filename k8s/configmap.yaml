@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: trading-core-config
 data:
-  SPRING_DATASOURCE_URL: jdbc:postgresql://host.minikube.internal:5432/iris
+  SPRING_DATASOURCE_URL: jdbc:postgresql://host.minikube.internal:5432/trading_core
   SPRING_KAFKA_BOOTSTRAP_SERVERS: host.minikube.internal:29093
   SPRING_DATA_MONGODB_URI: mongodb://host.minikube.internal:27017/trading_core
   REDIS_HOST: host.minikube.internal

@@ -40,10 +40,11 @@ Each bounded context is internally structured as:
 ├── domain/           Pure domain: aggregates, value objects, domain exceptions
 ├── application/
 │   ├── command/      CommandHandlers (write side — mutates state)
-│   └── query/        QueryHandlers (read side — returns DTOs, no mutation)
+│   ├── query/        QueryHandlers (read side — returns DTOs, no mutation)
+│   ├── port/out/     Interfaces owned by the application (CurrentUserProvider, repositories...)
+│   └── result/       What handlers return
 ├── infrastructure/
-│   ├── ports/        Interfaces owned by the application (UserRepository, etc.)
-│   └── adapters/     Implementations: JOOQ, Kafka, HTTP clients
+│   └── adapters/     Implementations of the ports: JOOQ, Kafka, HTTP clients, security context
 └── api/              REST controllers + DTOs (inbound adapter)
 ```
 
@@ -109,6 +110,27 @@ GET /api/v1/users/me
 - Account locks after 5 failed login attempts (30 min lockout, auto-unlocks)
 - `BadCredentialsException` always returns generic "Invalid credentials" (no username enumeration)
 - Default role on registration: `ROLE_USER` (seeded in V2 migration, id=2)
+
+## Identity (Keycloak migration, in progress)
+
+The auth/ BC above is being replaced by Keycloak 26. Step 3 of the migration removes the old login/JWT code and the `auth` schema.
+
+Target model:
+- **BFF**: the Spring backend is a confidential OAuth2 client (`trading-bff`, Authorization Code + PKCE). Tokens never reach the browser, which only holds an httpOnly session cookie.
+- **Resource server**: validates signature (JWKS), issuer and audience (`aud`), maps `realm_access.roles` to `ROLE_*`.
+- **Identity**: Keycloak `sub` (UUID) is the user id everywhere, wrapped in a value object per BC; `AuthenticatedPrincipal` interface in `shared.infrastructure.security`, no Spring Security types in application/domain. Handlers get the caller through a `CurrentUserProvider` port (`application/port/out`), implemented by an adapter that translates the principal into the BC's own id type and refuses anonymous callers (see `identity/`).
+- **Architecture rules**: `ArchitectureTest` (ArchUnit) enforces the layering above. Temporary exceptions, to remove: legacy `auth/` is excluded (deleted in B4); `marketdata` still keeps its ports in `infrastructure/ports` (move them to `application/port/out`).
+- Real users self-register in Keycloak; Terraform never creates them.
+
+Infrastructure as code (`infra/terraform/keycloak/`):
+- No realm JSON import. Keycloak starts empty with a bootstrap service account (`KC_BOOTSTRAP_ADMIN_CLIENT_ID/SECRET`); Terraform logs in with it and creates the realm `trading`. In prod, replace it by a narrower account and delete the bootstrap one.
+- **Never redeclare or import what Keycloak creates by default** (built-in client scopes `basic`/`roles`/`profile`/`email`, default roles): they change across Keycloak versions. Declare only our own roles, clients, mappers, dev accounts.
+- Beware **authoritative** resources (`keycloak_openid_client_default_scopes`, `keycloak_realm_default_client_scopes`, `keycloak_default_roles`): they replace the whole list. Omitting `basic` removes the `sub` claim. Check `terraform plan` before every apply.
+- Audience: prefer an audience mapper on the client; use a shared `aud-<service>` scope only when several clients need it.
+- Secrets never appear in `.tf` files: `TF_VAR_*` from the gitignored `.env`. `tfstate` holds secrets in clear text: gitignored locally, encrypted remote backend in prod.
+- **Before prod**: set `terraform_deletion_protection = true` on the realm; replace the bootstrap account by a permanent least-privilege one (split `envs/dev` into `bootstrap/`, logged in with the bootstrap account, which creates realm `trading` + client `terraform-provisioner` limited to `realm-admin` of that realm, and `config/`, logged in with the provisioner; then delete the bootstrap client in `master` by hand, Terraform cannot delete the account it is logged in with; secret in a secret manager, not `.env`); remote encrypted state; remove `trading-dev-tools` and dev users; `ssl_required` and real hostname/TLS.
+- **Before prod (actuator)**: do not expose health/metrics on the public port. Serve actuator on a separate management port (`management.server.port`, e.g. 9090): Kubernetes probes hit the pod IP on that port, Prometheus scrapes it from inside the cluster, and the `Service`/`Ingress` only expose 8080. Then drop the `/actuator/**` `permitAll` lines from `SecurityConfig`.
+- Run: `set -a; source .env; set +a; export TF_VAR_terraform_client_secret="$TERRAFORM_CLIENT_SECRET"; cd infra/terraform/keycloak; terraform plan`
 
 ## Database migrations
 
