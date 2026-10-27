@@ -17,13 +17,12 @@ class JwtDecoderConfig {
      * Keycloak publishes its signing keys at a fixed path under the issuer. Using it directly (instead of
      * OIDC discovery) makes the keys load lazily: the app can start while Keycloak is down.
      */
-    private static final String JWKS_PATH = "/protocol/openid-connect/certs";
-
     @Bean
     JwtDecoder jwtDecoder(
             @Value("${app.security.oauth2.issuer-uri}") String issuerUri,
+            @Value("${app.security.oauth2.jwks-path}") String jwksPath,
             @Value("${app.security.oauth2.audience}") String audience) {
-        NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(issuerUri + JWKS_PATH).build();
+        NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(issuerUri + jwksPath).build();
 
         OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(
                 JwtValidators.createDefaultWithIssuer(issuerUri),
