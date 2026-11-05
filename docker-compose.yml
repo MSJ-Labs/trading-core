@@ -128,7 +128,7 @@ services:
     image: quay.io/keycloak/keycloak:26.4.0
     container_name: trading-core-keycloak
     # start-dev: HTTP allowed, relaxed hostname checks, no production caches. Prod uses "start" behind a TLS proxy.
-    # No realm import: the realm and everything in it is created by Terraform (infra/terraform/keycloak),
+    # No realm import: the realm and everything in it is created by Terraform (separate repo trading-infra, terraform/keycloak),
     # so Keycloak keeps generating its own built-in scopes and roles.
     command: start-dev
     ports:
