@@ -1,7 +1,7 @@
 package com.msj.marketdata.infrastructure.adapters.binance;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.msj.marketdata.application.command.PriceTickCommand;
 import com.msj.marketdata.application.command.PriceTickUseCase;
 import jakarta.annotation.PostConstruct;
