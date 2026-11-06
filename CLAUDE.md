@@ -75,8 +75,8 @@ GET /api/v1/me
 | Concern | Technology |
 |---|---|
 | Language | Java 25 (Eclipse Temurin LTS) |
-| Framework | Spring Boot 3.5 |
-| Persistence (write) | JOOQ 3.19 (type-safe SQL, no code-gen — hand-written `Tables.java`) |
+| Framework | Spring Boot 4.1 (Spring Framework 7, Jackson 3) |
+| Persistence (write) | JOOQ 3.20, version managed by Boot (type-safe SQL, no code-gen — hand-written `Tables.java`) |
 | Persistence (read, Layer 5+) | MongoDB |
 | DB migrations | Flyway — DDL managed exclusively here |
 | IDs | TSID (hypersistence-tsid) — BIGINT in DB, wrapped in value object records |
@@ -84,6 +84,14 @@ GET /api/v1/me
 | Security | Spring Security OAuth2 resource server + Keycloak 26 (JWT) |
 | Market data | CoinGecko REST + Binance WebSocket (Layer 3) |
 | Paper trading | Alpaca sandbox API (Layer 8) |
+
+### Spring Boot 4 conventions (migrated from 3.5)
+
+- **Starters**: `spring-boot-starter-webmvc` (not `-web`), `-aspectj` (not `-aop`), `-security-oauth2-resource-server`, `-flyway`. Test side: `-webmvc-test` and `-security-test` are separate from `-starter-test`.
+- **Jackson 3**: `tools.jackson.*` packages, except annotations which stay in `com.fasterxml.jackson.annotation`. Jackson 2 remains on the classpath only through springdoc: never use it in our code. Modules on the classpath (Blackbird, java.time) are auto-registered, no `@Bean` needed. Inject Boot's `JsonMapper` rather than building an `ObjectMapper`. Date property: `spring.jackson.datatype.datetime.write-dates-as-timestamps`.
+- **Tests**: `@WebMvcTest` lives in `org.springframework.boot.webmvc.test.autoconfigure`; use `@MockitoBean` (`@MockBean` is gone).
+- **Kafka**: `@RetryableTopic(backOff = @BackOff(...))` with `org.springframework.kafka.annotation.BackOff`; `spring-retry` is no longer a dependency.
+- **MongoDB**: `spring.mongodb.uri` (no longer `spring.data.mongodb.uri`).
 
 ## Identity (Keycloak 26)
 
@@ -187,7 +195,7 @@ Frontend: candlestick chart on coin row click using **TradingView Lightweight Ch
 
 **Approach**: go slowly — master Kafka and MongoDB step by step. Start with Docker Compose, then producer, then consumers, then read model queries, then chart UI.
 
-**Kafka serialization**: JSON (`JsonSerializer`/`JsonDeserializer`) for now — producer and consumer are in the same JVM so no schema contract is needed. **Migrate to Avro + Confluent Schema Registry when `marketdata` is extracted to its own microservice** (or when another bounded context like `alerting` or `trading` consumes the same topic from a separate service). Migration path: add Schema Registry to docker-compose, add Avro Maven plugin, write `.avsc` schema files, swap serializers in config. Drop and recreate the topic on cutover (market data is ephemeral, no historical loss).
+**Kafka serialization**: JSON (`JacksonJsonSerializer`/`JacksonJsonDeserializer`, Jackson 3) for now — producer and consumer are in the same JVM so no schema contract is needed. **Migrate to Avro + Confluent Schema Registry when `marketdata` is extracted to its own microservice** (or when another bounded context like `alerting` or `trading` consumes the same topic from a separate service). Migration path: add Schema Registry to docker-compose, add Avro Maven plugin, write `.avsc` schema files, swap serializers in config. Drop and recreate the topic on cutover (market data is ephemeral, no historical loss).
 
 ## marketdata/ bounded context (Layer 3+4 — completed)
 

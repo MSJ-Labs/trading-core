@@ -12,11 +12,10 @@
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring-boot.version>3.5.12</spring-boot.version>
-        <jooq.version>3.19.15</jooq.version>
+        <spring-boot.version>4.1.2</spring-boot.version>
 
         <!-- Mirrors the jacoco-check PACKAGE excludes below: packages deemed
-             impractical/low-value to unit-test (real DB/WebSocket I/O, Spring
+             impractical/low value to unit-test (real DB/WebSocket I/O, Spring
              config, generated JOOQ schema) so SonarCloud's new-code coverage
              gate doesn't flag them on unrelated touches. -->
         <sonar.coverage.exclusions>
@@ -59,7 +58,7 @@
         <!-- Spring Boot Starters -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
 
         <dependency>
@@ -69,8 +68,8 @@
 
         <!-- Flyway for migrations -->
         <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
         </dependency>
 
         <dependency>
@@ -85,13 +84,6 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- JOOQ -->
-        <dependency>
-            <groupId>org.jooq</groupId>
-            <artifactId>jooq</artifactId>
-            <version>${jooq.version}</version>
-        </dependency>
-
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -100,9 +92,9 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- Jackson for JSON processing -->
+        <!-- Jackson 3 for JSON processing -->
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
+            <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
 
@@ -110,7 +102,7 @@
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.8.5</version>
+            <version>3.2.0</version>
         </dependency>
 
         <!-- Spring Security (for authentication) -->
@@ -122,7 +114,7 @@
         <!-- OAuth2 resource server: validates Keycloak access tokens (JWT) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+            <artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
         </dependency>
 
         <!-- Validation -->
@@ -138,17 +130,17 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- @WebMvcTest and MockMvc support (split out of starter-test in Boot 4) -->
         <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>testcontainers</artifactId>
-            <version>1.20.4</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
             <scope>test</scope>
         </dependency>
 
+        <!-- @WithMockUser and Spring Security test support (split out of starter-test in Boot 4) -->
         <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>1.20.4</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security-test</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -206,23 +198,20 @@
 
         <!-- Kafka (Layer 5: price tick event streaming) -->
         <dependency>
-            <groupId>org.springframework.kafka</groupId>
-            <artifactId>spring-kafka</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-kafka</artifactId>
         </dependency>
 
-        <!-- Non-blocking retry + DLT for @RetryableTopic (requires AOP proxying) -->
-        <dependency>
-            <groupId>org.springframework.retry</groupId>
-            <artifactId>spring-retry</artifactId>
-        </dependency>
+        <!-- Non-blocking retry + DLT for @RetryableTopic (requires AOP proxying).
+             spring-retry removed: no longer managed by Boot 4; re-add with an explicit version if compile/runtime needs it -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-aop</artifactId>
+            <artifactId>spring-boot-starter-aspectj</artifactId>
         </dependency>
 
         <!-- Jackson Blackbird: replaces reflection with bytecode generation at startup -->
         <dependency>
-            <groupId>com.fasterxml.jackson.module</groupId>
+            <groupId>tools.jackson.module</groupId>
             <artifactId>jackson-module-blackbird</artifactId>
         </dependency>
 
@@ -244,16 +233,12 @@
             <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
 
-        <!-- Observability: bridges Micrometer tracing API → OpenTelemetry SDK -->
+        <!-- Observability: OpenTelemetry tracing (Micrometer bridge + OTLP exporter + Boot auto-config);
+             sends trace spans to Tempo over OTLP/HTTP. Boot 4 needs this starter: the bare
+             bridge/exporter artifacts no longer carry the auto-configuration -->
         <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-tracing-bridge-otel</artifactId>
-        </dependency>
-
-        <!-- Observability: OTLP exporter — sends trace spans to Tempo over HTTP -->
-        <dependency>
-            <groupId>io.opentelemetry</groupId>
-            <artifactId>opentelemetry-exporter-otlp</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-opentelemetry</artifactId>
         </dependency>
 
         <!-- Observability: Logback appender — pushes logs directly to Loki -->
@@ -343,7 +328,7 @@
                                         <exclude>com.msj.controller</exclude>
                                         <!-- Infrastructure adapters — require real DB (testcontainers) -->
                                         <exclude>com.msj.auth.infrastructure.adapters.persistence</exclude>
-                                        <!-- Hand-written JOOQ schema — no domain logic -->
+                                        <!-- Handwritten JOOQ schema — no domain logic -->
                                         <exclude>com.msj.infrastructure.jooq</exclude>
                                         <!-- Spring Boot entry point + config -->
                                         <exclude>com.msj</exclude>
