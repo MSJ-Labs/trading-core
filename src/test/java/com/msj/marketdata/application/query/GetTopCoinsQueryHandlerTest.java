@@ -71,6 +71,18 @@ class GetTopCoinsQueryHandlerTest {
         assertThat(result).hasSize(1);
     }
 
+    @Test
+    void handle_keeps_cached_coins_whose_price_expired_and_does_not_hit_provider() {
+        CoinPrice withoutPrice = CoinPrice.builder().id("ethereum").symbol("ETH").name("Ethereum").build();
+        when(priceCache.getTopCoins()).thenReturn(List.of(fakeCoin("bitcoin"), withoutPrice));
+
+        List<CoinPrice> result = handler.handle(new GetTopCoinsQuery(250));
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(1).priceUsd()).isNull();
+        verifyNoInteractions(marketDataProvider);
+    }
+
     private CoinPrice fakeCoin(String coinId) {
         return CoinPrice.builder()
                 .id(coinId).symbol(coinId.toUpperCase()).name(coinId)

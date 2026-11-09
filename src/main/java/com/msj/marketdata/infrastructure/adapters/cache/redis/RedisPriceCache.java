@@ -11,9 +11,9 @@ import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -36,30 +36,38 @@ import java.util.stream.IntStream;
 public class RedisPriceCache implements PriceCache {
 
     private static final String COIN_KEY_PREFIX = "price:coin:";
+    private static final String IDENTITY_KEY_PREFIX = "price:identity:";
     private static final String TOP_INDEX_KEY = "price:index:top";
+    private static final String TOP_INDEX_TMP_KEY = "price:index:top:tmp";
     private static final String SYMBOL_INDEX_PREFIX = "price:index:symbol:";
     private static final Duration TTL = Duration.ofSeconds(60);
 
     private final RedisTemplate<String, CoinPriceRecord> coinTemplate;
+    private final RedisTemplate<String, CoinIdentityRecord> identityTemplate;
     private final StringRedisTemplate stringRedisTemplate;
 
     @Override
     public List<CoinPrice> getTopCoins() {
+        // LinkedHashSet from Redis keeps rank order; fetchCoins preserves it.
         Set<String> coinIds = stringRedisTemplate.opsForZSet().range(TOP_INDEX_KEY, 0, -1);
         return fetchCoins(coinIds);
     }
 
     @Override
     public void putTopCoins(List<CoinPrice> coins) {
-        coins.forEach(this::putCoinPrice);
-        stringRedisTemplate.delete(TOP_INDEX_KEY);
         if (coins.isEmpty()) {
             return;
         }
+        coins.forEach(this::putCoinPrice);
+        identityTemplate.opsForValue().multiSet(coins.stream().collect(Collectors.toMap(
+                coin -> IDENTITY_KEY_PREFIX + coin.coinId(), CoinIdentityRecord::fromDomain, (a, b) -> b)));
+        // Build the new ranking aside then RENAME: atomic swap, readers never see an empty index.
         Set<ZSetOperations.TypedTuple<String>> ranked = IntStream.range(0, coins.size())
                 .mapToObj(rank -> ZSetOperations.TypedTuple.of(coins.get(rank).coinId(), (double) rank))
                 .collect(Collectors.toSet());
-        stringRedisTemplate.opsForZSet().add(TOP_INDEX_KEY, ranked);
+        stringRedisTemplate.delete(TOP_INDEX_TMP_KEY);
+        stringRedisTemplate.opsForZSet().add(TOP_INDEX_TMP_KEY, ranked);
+        stringRedisTemplate.rename(TOP_INDEX_TMP_KEY, TOP_INDEX_KEY);
     }
 
     @Override
@@ -84,12 +92,23 @@ public class RedisPriceCache implements PriceCache {
         if (coinIds == null || coinIds.isEmpty()) {
             return List.of();
         }
-        List<String> keys = coinIds.stream().map(coinId -> COIN_KEY_PREFIX + coinId).toList();
-        List<CoinPriceRecord> priceRecords = coinTemplate.opsForValue().multiGet(keys);
-        if (priceRecords == null) {
-            return List.of();
+        List<String> ids = List.copyOf(coinIds);
+        List<CoinPriceRecord> prices = coinTemplate.opsForValue()
+                .multiGet(ids.stream().map(id -> COIN_KEY_PREFIX + id).toList());
+        List<CoinIdentityRecord> identities = identityTemplate.opsForValue()
+                .multiGet(ids.stream().map(id -> IDENTITY_KEY_PREFIX + id).toList());
+        List<CoinPrice> result = new ArrayList<>(ids.size());
+        for (int i = 0; i < ids.size(); i++) {
+            CoinPriceRecord price = prices == null ? null : prices.get(i);
+            CoinIdentityRecord identity = identities == null ? null : identities.get(i);
+            if (price != null) {
+                result.add(price.toDomain());
+            } else if (identity != null) {
+                // Price snapshot expired: keep the coin, without price.
+                result.add(identity.toDomainWithoutPrice());
+            }
         }
-        return priceRecords.stream().filter(Objects::nonNull).map(CoinPriceRecord::toDomain).toList();
+        return result;
     }
 
     private static String symbolIndexKey(String symbol) {

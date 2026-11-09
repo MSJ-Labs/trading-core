@@ -19,9 +19,18 @@ class RedisCacheConfig {
     @Bean
     RedisTemplate<String, CoinPriceRecord> coinPriceRedisTemplate(RedisConnectionFactory connectionFactory,
                                                                   JsonMapper jsonMapper) {
-        JacksonJsonRedisSerializer<CoinPriceRecord> serializer =
-                new JacksonJsonRedisSerializer<>(jsonMapper, CoinPriceRecord.class);
-        RedisTemplate<String, CoinPriceRecord> template = new RedisTemplate<>();
+        return jsonTemplate(connectionFactory, new JacksonJsonRedisSerializer<>(jsonMapper, CoinPriceRecord.class));
+    }
+
+    @Bean
+    RedisTemplate<String, CoinIdentityRecord> coinIdentityRedisTemplate(RedisConnectionFactory connectionFactory,
+                                                                        JsonMapper jsonMapper) {
+        return jsonTemplate(connectionFactory, new JacksonJsonRedisSerializer<>(jsonMapper, CoinIdentityRecord.class));
+    }
+
+    private static <T> RedisTemplate<String, T> jsonTemplate(RedisConnectionFactory connectionFactory,
+                                                             JacksonJsonRedisSerializer<T> serializer) {
+        RedisTemplate<String, T> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
         template.setKeySerializer(new StringRedisSerializer());
         template.setValueSerializer(serializer);
