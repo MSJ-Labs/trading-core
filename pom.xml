@@ -189,6 +189,25 @@
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
 
+        <!-- Real Redis in Docker for RedisPriceCacheContainerTest / SchedulingConfigContainerTest (version managed by Boot's BOM) -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- ShedLock (Redis lock): only one replica runs the CoinGecko top-coins refresh -->
+        <dependency>
+            <groupId>net.javacrumbs.shedlock</groupId>
+            <artifactId>shedlock-spring</artifactId>
+            <version>7.11.0</version>
+        </dependency>
+        <dependency>
+            <groupId>net.javacrumbs.shedlock</groupId>
+            <artifactId>shedlock-provider-redis-spring</artifactId>
+            <version>7.11.0</version>
+        </dependency>
+
         <!-- TSID for unique identifiers -->
         <dependency>
             <groupId>io.hypersistence</groupId>
